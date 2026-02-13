@@ -6,6 +6,10 @@ This repository does not include large geospatial datasets. Use the Google Drive
 
 - **Google Drive folder (public):** _TODO_
 
+## Local location (your machine)
+
+`/Users/danielaresendiz/Library/CloudStorage/OneDrive-UniversityCollegeLondon(2)/SSMAD_2/Project`
+
 ## Samples
 
 If you want to add small examples for reproducibility, place them under:
@@ -13,4 +17,3 @@ If you want to add small examples for reproducibility, place them under:
 - `data/sample/`
 
 Keep samples lightweight (CSV/GeoJSON) and avoid uploading large rasters or geopackages.
-

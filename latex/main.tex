@@ -1,12 +1,16 @@
 \documentclass[11pt]{article}
 
-\usepackage[margin=1in]{geometry}
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{setspace}
+\usepackage{titlesec}
 
 \hypersetup{
   colorlinks=true,
@@ -15,67 +19,53 @@
   citecolor=black
 }
 
-\title{Severed Accessibility and Urban Resilience:\\A multi-scalar analysis of flood risk in Chennai, India}
-\author{Daniela Resendiz Garcia}
-\date{2021}
+\onehalfspacing
+\setcounter{secnumdepth}{0}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\titlespacing*{\section}{0pt}{1.2em}{0.6em}
+
+\title{Severed Accessibility and Urban Resilience:\\A multi-scalar analysis of flood risk in Chennai}
+\author{Daniela Res\'endiz Garc\'ia\\
+\small BARC0026: Analytical Design Research Project Coursework\\
+\small MSc in Space Syntax: Architecture and Cities\\
+\small The Bartlett School of Architecture, University College of London\\
+\small Supervisor: Prof.\ Alan Penn}
+\date{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-This paper introduces a spatial methodology to model accessibility loss under extreme flood conditions in Chennai, India. A 100-year return period flood scenario is overlaid on the street network to quantify where movement and access to services collapse. The analysis couples Space Syntax accessibility measures with flood exposure and supporting spatial layers to identify priority corridors and zones for safe shelter allocation and evacuation planning.
+Flooding is a rapidly intensifying urban challenge, disrupting essential services and exposing structural inequalities across cities worldwide. While existing frameworks address either ecological resilience or spatial configuration, few capture how flood events dynamically alter accessibility---disconnecting populations from shelters, services, or safe mobility routes.
+
+This study introduces a spatial methodology that models accessibility loss under extreme flood conditions, integrating a 100-year return period scenario with network-based spatial analysis. Applied to Chennai, the approach overlays flood impact on road networks, land use, and infrastructure to assess where functional accessibility collapses. A clustering analysis further identifies priority zones for safe shelter allocation and evacuation planning.
+
+Results show that accessibility degradation is spatially uneven. Compact urban forms retain greater connectivity under stress, while dispersed or fragmented areas become structurally isolated. Key corridors and intervention areas are mapped both at local and metropolitan scales, offering actionable entry points for adaptive planning.
+
+The method reframes resilience not as physical resistance to flooding, but as the preservation of spatial connection under disruption. It is transferable to diverse urban contexts and leverages open-access spatial and environmental data, enabling scalable diagnostics without relying on intensive modelling or proprietary inputs.
 \end{abstract}
 
 \section{Introduction}
 \input{sections/01_introduction}
 
-\section{Study area and data}
-\input{sections/02_data}
+\section{Literature Review}
+\input{sections/02_literature_review}
 
-\section{Methods}
+\section{Methodology}
 \input{sections/03_methods}
 
-\section{Results}
-\input{sections/04_results}
+\section{Results and Analysis}
+\input{sections/04_results_and_analysis}
 
-\section{Discussion and design implications}
+\section{Discussion}
 \input{sections/05_discussion}
 
-\section{Conclusion}
+\section{Conclusions}
 \input{sections/06_conclusion}
 
-\section*{Data and code availability}
-Large datasets are shared via Google Drive due to GitHub size limits (see \texttt{DATA\_SOURCES.md} in the repository). This repository contains the curated figures used in the paper and documentation of the workflow.
-
-\section*{Figures}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{../figures/readme/chennai_maps_p02_accessibility.png}
-  \caption{Accessibility under normal conditions versus a flood scenario (global and local measures).}
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \includegraphics[width=\textwidth]{../figures/readme/chennai_maps_p04_density_accessibility.png}
-  \caption{Population density, accessibility patterns, and safe-zone indicators.}
-\end{figure}
-
-\begin{figure}[ht]
-  \centering
-  \begin{subfigure}[t]{0.49\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../figures/readme/chennai_maps_p05_shelters.png}
-    \caption{Shelter evaluation.}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[t]{0.49\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{../figures/readme/chennai_maps_p06_priority_corridors.png}
-    \caption{Priority corridors.}
-  \end{subfigure}
-  \caption{Intervention targeting by combining accessibility loss, exposure, and critical destinations.}
-\end{figure}
+\section{References}
+\input{sections/07_references}
 
 \end{document}
-

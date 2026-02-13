@@ -51,6 +51,10 @@ Full map atlas: [`figures/chennai_maps.pdf`](figures/chennai_maps.pdf).
 
 ## Methodology (overview)
 
+<p align="center">
+  <img src="docs/diagrams/methodology_framework_chennai.png" width="92%" alt="Methodological framework for flood-accessibility modelling">
+</p>
+
 | Step | Method | Tools |
 |------|--------|-------|
 | Network analysis | Space Syntax (NAIN, NACH) at multiple radii | DepthmapX, QGIS |
@@ -72,7 +76,9 @@ Full map atlas: [`figures/chennai_maps.pdf`](figures/chennai_maps.pdf).
 
 ## Paper (LaTeX)
 
-The paper source lives in [`latex/`](latex/). Latest PDF: [`papers/ADRP_Chennai_2021_Resendiz.pdf`](papers/ADRP_Chennai_2021_Resendiz.pdf).
+Final submission PDF: [`papers/210525_ADRP_DanielaResendiz.pdf`](papers/210525_ADRP_DanielaResendiz.pdf) (+ [`papers/Appendix_A_Methods.pdf`](papers/Appendix_A_Methods.pdf)).
+
+The paper source lives in [`latex/`](latex/). (LaTeX scaffold PDF: [`papers/ADRP_Chennai_2021_Resendiz.pdf`](papers/ADRP_Chennai_2021_Resendiz.pdf).)
 
 ## Data Access
 

@@ -36,10 +36,17 @@ Chennai_Flood_Accessibility_Data/
 
 ## Links to fill in
 
+## Current data location (local)
+
+Your full project datasets currently live here:
+
+`/Users/danielaresendiz/Library/CloudStorage/OneDrive-UniversityCollegeLondon(2)/SSMAD_2/Project`
+
+## Public link (recommended)
+
 - **Google Drive folder (public):** _TODO_
 
 ## Notes
 
 - Do not upload raw `.shp` components separately unless zipped; prefer `.gpkg` for fewer files.
 - Keep anything >100MB out of GitHub.
-
