@@ -10,6 +10,33 @@
 
 This study introduces a spatial methodology that models accessibility loss under extreme flood conditions, integrating a 100-year return period scenario with network-based spatial analysis. Applied to Chennai, India, the approach overlays flood impact on road networks, land use, and infrastructure to assess where functional accessibility collapses. A clustering analysis further identifies priority zones for safe shelter allocation and evacuation planning.
 
+<p align="center">
+  <img src="figures/readme/hero_chennai_flood.webp" width="62%" alt="Chennai flood (2015) photo">
+</p>
+
+## Key Results (maps)
+
+### Accessibility under normal vs flood conditions
+
+<p align="center">
+  <img src="figures/readme/chennai_maps_p02_accessibility.png" width="95%" alt="Accessibility comparison maps">
+</p>
+
+### Population density, accessibility, and safe zones
+
+<p align="center">
+  <img src="figures/readme/chennai_maps_p04_density_accessibility.png" width="95%" alt="Density and accessibility maps">
+</p>
+
+### Shelter evaluation and priority interventions
+
+<p align="center">
+  <img src="figures/readme/chennai_maps_p05_shelters.png" width="48%" alt="Shelter evaluation maps">
+  <img src="figures/readme/chennai_maps_p06_priority_corridors.png" width="48%" alt="Priority corridors maps">
+</p>
+
+Full map atlas: [`figures/chennai_maps.pdf`](figures/chennai_maps.pdf).
+
 ## Research Questions
 
 1. How does street network configuration influence flood vulnerability?
@@ -20,9 +47,9 @@ This study introduces a spatial methodology that models accessibility loss under
 
 - **Accessibility degradation is spatially uneven.** Compact urban forms retain greater connectivity under stress, while dispersed or fragmented areas become structurally isolated.
 - **Resilience is reframed** not as physical resistance to flooding, but as the preservation of spatial connection under disruption.
-- Key corridors and intervention areas are mapped at both local and metropolitan scales, offering actionable entry points for adaptive planning.
+- **Priority corridors and zones** can be derived by intersecting flood exposure, accessibility loss, and critical service locations.
 
-## Methodology
+## Methodology (overview)
 
 | Step | Method | Tools |
 |------|--------|-------|
@@ -33,32 +60,45 @@ This study introduces a spatial methodology that models accessibility loss under
 | Blue-green infrastructure | WSUD-based design strategies | Design analysis |
 
 ### Study Area
-- **Adyar River basin**, Chennai, Tamil Nadu, India
-- Population: ~2 million residents
-- High flood vulnerability due to encroachment on water bodies
 
-### Data Sources
+- **Adyar River basin**, Chennai, Tamil Nadu, India
+
+### Data Sources (high level)
+
 - OpenStreetMap for street network data
-- Chennai Metropolitan Development Authority land use maps
-- Flood inundation maps from 2015 Chennai floods
+- Land use maps from the Chennai Metropolitan Development Authority
+- Flood inundation maps (2015 Chennai floods, 100-year return scenario)
 - Satellite imagery (Google Earth, Sentinel-2)
+
+## Paper (LaTeX)
+
+The paper source lives in [`latex/`](latex/). Latest PDF: [`papers/ADRP_Chennai_2021_Resendiz.pdf`](papers/ADRP_Chennai_2021_Resendiz.pdf).
+
+## Data Access
+
+Large datasets are hosted on Google Drive (GitHub size limits). See [`DATA_SOURCES.md`](DATA_SOURCES.md) for a checklist and where to plug your shared folder link.
 
 ## Repository Structure
 
 ```
 flood-accessibility-chennai/
 ├── README.md
+├── DATA_SOURCES.md
 ├── LICENSE
 ├── .gitignore
-├── docs/                    # Project documentation and report
-├── figures/                 # Maps and result visualisations
-└── data/                    # Reference data descriptions
+│
+├── code/                      # Minimal scripts / processing notes
+├── data/                      # Sample data + access docs
+├── docs/                      # Optional project page / diagrams
+├── figures/                   # Maps and result visualisations
+├── latex/                     # LaTeX paper source
+└── papers/                    # Output PDF(s)
 ```
 
 ## Software and Tools
 
 - **DepthmapX** - Space Syntax segment angular analysis
-- **QGIS** - GIS analysis, flood overlay, mapping
+- **QGIS** - GIS overlay, mapping, export
 - **OpenStreetMap** - Street network data
 
 ## Citation
