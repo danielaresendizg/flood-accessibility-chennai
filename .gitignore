@@ -1,0 +1,25 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large files
+*.gpkg
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.tif
+*.tiff
+*.zip
+*.pptx
+*.docx
+
+# InDesign
+*.indd
+*.indb
+*.idml
+
+# IDE
+.vscode/
+.idea/
