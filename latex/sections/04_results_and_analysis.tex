@@ -24,15 +24,11 @@ Flood scenarios produced pronounced disruptions in Chennai's urban accessibility
 
 Accessibility loss manifested heterogeneously across critical urban functions, with marked differences among urban fragments. High-risk areas accounted for a significant proportion of degraded accessibility: 35 health infrastructure units, 72 educational facilities, 163 slums, and 45 shelters were in high-risk zones. Health services and slums exhibited the highest concentration in these high-risk fragments, reflecting acute vulnerabilities during extreme flood events. Educational facilities also faced considerable exposure, with a notable number situated in zones with high penalty accessibility loss. Conversely, most shelters were distributed in fragments categorized as null or moderate risk, yet a non-negligible portion remained exposed within highrisk areas. These findings underline systemic misalignments between critical services and resilient urban structures, leaving essential infrastructure and marginalized communities especially vulnerable during flood events. The analysis of urban land use across different fragments revealed that residential areas accounted for the largest share of flood-affected zones, particularly in the highly impacted categories. Agricultural and open space areas demonstrated lower exposure, while commercial and institutional zones were moderately impacted. Fragments with a predominance of residential and mixed-residential land uses displayed the greatest decline in accessibility (Figure 5). This spatial configuration underscores the vulnerability of densely populated and economically vital areas, emphasizing the urgent need for targeted resilience strategies in these land use categories. Detailed evaluation from Table 2 shows differentiated impacts across city fragments. In Fragment 1, critical infrastructures such as health and educational services, slums, and shelters concentrated significantly in high-risk zones, with health units and slums showing the most acute vulnerability. Fragment 2 exhibited a comparatively moderate distribution, while Fragment 3, though smaller in size, demonstrated a disproportionately high exposure of slums and shelters to flood risk. Fragment 4 presented the highest number of affected slums and shelters across all categories, indicating extreme vulnerability. Fragment 5, despite its smaller representation, continued the pattern of infrastructure exposure to high-risk areas. This fragment-by-fragment breakdown highlights the heterogeneity of urban vulnerability and supports the design of localized, fragment-specific resilience interventions.
 
-number of blocks
-
-level of risk per fragment
-
-Figure 5. Critical infrastructure overlaid with flood level of risk in the five- fragments. The map highlights the distribution of services (health, education, slums, shelters) in relation to spatial risk categories across Chennai's five urban fragments.
-
-level of risk per fragment
-
-number of infraestructure or services
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figures/infraestructure.jpg}
+  \caption{Critical infrastructure overlaid with flood level of risk in the five urban fragments. The map highlights the distribution of services (health, education, slums, shelters) in relation to spatial risk categories across Chennai's five urban fragments.}
+\end{figure}
 
 Table 2. Overlay of infrastructure or services and accessibility class by urban fragment.
 
@@ -40,25 +36,31 @@ Global-Scale Strategies: Emergency Routes and Critical Zone Identification The t
 
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=\textwidth,page=6]{../../figures/chennai_maps.pdf}
-  \caption{Priority corridors and city-wide intervention areas under flood conditions (source atlas: \texttt{figures/chennai\_maps.pdf}).}
+  \includegraphics[width=\textwidth]{figures/emergency_main_connections.jpg}
+  \caption{Priority corridors and city-wide intervention areas under flood conditions.}
 \end{figure}
 
-Leveraging a Digital Elevation Model (Copernicus GLO-30), which served to identify the city's lowest-lying areas, combined with waterways and water bodies data from the India Water 
+Leveraging a Digital Elevation Model (Copernicus GLO-30), which served to identify the city's lowest-lying areas, combined with waterways and water bodies data from the India Water Resources Information System, a comprehensive floodplain analysis was conducted. The identified low-lying zones were cross-referenced with high flood-risk areas, showing strong spatial coincidence. Based on this overlap, zones suitable for floodplain excavation were proposed, prioritizing large open spaces identified through recent satellite imagery. Furthermore, areas where residential buildings were detected using Google's Open Buildings dataset were flagged for density management or growth restriction strategies, aiming to mitigate future flood vulnerability through adaptive urban planning. This multi-layered model provided the foundation for a robust global-scale resilience strategy, balancing immediate flood responses with long-term urban planning interventions.
 
-Resources Information System, a comprehensive floodplain analysis was conducted. The identified low-lying zones were cross-referenced with high flood-risk areas, showing strong spatial coincidence. Based on this overlap, zones suitable for floodplain excavation were proposed, prioritizing large open spaces identified through recent satellite imagery. Furthermore, areas where residential buildings were detected using Google's Open Buildings dataset were flagged for density management or growth restriction strategies, aiming to mitigate future flood vulnerability through adaptive urban planning. This multi-layered model provided the foundation for a robust global-scale resilience strategy, balancing immediate flood responses with long-term urban planning interventions (see figure 7).
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figures/floodplain.jpg}
+  \caption{Proposed floodplain intervention zones based on elevation and hydrological data.}
+\end{figure}
 
-Figure 7. Proposed floodplain intervention zones based on elevation and hydrological data.
+At a local scale (NAINr800 and NACHr800), a complementary waterways and flood-impacted street network model was developed, offering a foundation for hybrid land-water mobility strategies. Although primarily designed to evaluate accessibility during floods, this model remains available for future expansion into integrated resilience frameworks.
 
-At a local scale (NAINr800 and NACHr800), a complementary waterways and flood-impacted street network model was developed, offering a foundation for hybrid land-water mobility strategies. Although primarily designed to evaluate accessibility during floods, this model remains available for future expansion into integrated resilience frameworks. Local-Scale Strategies: Safe Zones and Shelter Accessibility The waterways and flood street network model were utilized to assess the accessibility of existing emergency boat deployment points managed by the Greater Chennai Corporation (see figure 8). 
+\section*{Local-Scale Strategies: Safe Zones and Shelter Accessibility}
 
-Analysis revealed that 30.38\% of boat locations were within highly accessible zones (NAINr800 > 1.0), while 31.65\% were positioned in areas of lowest accessibility (NAINr800 $\leq$ 0.6). A more detailed histogram breakdown showed that 8.86\% of boats were in zones of excellent accessibility (NAINr800 > 1.2), 21.52\% in high-accessibility zones (1.0 < NAINr800 $\leq$ 1.2), and 22.78\% in moderately accessible areas (0.8 < NAINr800 $\leq$ 1.0), reinforcing the uneven distribution of resources across accessibility gradients (figure 9 and table 3). This distribution highlights critical vulnerabilities, particularly for peripheral and flood-prone neighbourhoods, underscoring the need for strategic relocation or augmentation of boat deployment points. This uneven distribution of emergency boat resources suggests critical gaps in flood-time accessibility, especially in peripheral and low-lying neighbourhoods. The model highlights strategic locations where new or relocated boat points could enhance flood resilience, supporting the development of hybrid land-water evacuation networks. Although primarily serving to evaluate current operational capacities, the accessibility model also establishes a baseline for future resilience strategies, enabling Chennai to incorporate waterbased mobility into its urban adaptation planning.
+The waterways and flood street network model were utilized to assess the accessibility of existing emergency boat deployment points managed by the Greater Chennai Corporation.
 
-Figure 8. Distribution of emergency boats under flood conditions.
+\begin{figure}[ht]
+  \centering
+  \includegraphics[width=\textwidth]{figures/safe.zones_shelters.jpg}
+  \caption{Distribution of emergency boats and safe zones under flood conditions. The figure shows the location of deployed emergency boats in relation to flood-adjusted accessibility (r800), highlighting spatial disparities in coverage across safe and vulnerable zones.}
+\end{figure}
 
-The figure shows the location of deployed emergency boats in relation to floodadjusted accessibility (r800), highlighting spatial disparities in coverage across safe and vulnerable zones.
-
-Figure 9. Accessibility histogram of emergency boat locations (NAINr800)
+Analysis revealed that 30.38\% of boat locations were within highly accessible zones (NAINr800 > 1.0), while 31.65\% were positioned in areas of lowest accessibility (NAINr800 $\leq$ 0.6). A more detailed histogram breakdown showed that 8.86\% of boats were in zones of excellent accessibility (NAINr800 > 1.2), 21.52\% in high-accessibility zones (1.0 < NAINr800 $\leq$ 1.2), and 22.78\% in moderately accessible areas (0.8 < NAINr800 $\leq$ 1.0), reinforcing the uneven distribution of resources across accessibility gradients. This distribution highlights critical vulnerabilities, particularly for peripheral and flood-prone neighbourhoods, underscoring the need for strategic relocation or augmentation of boat deployment points. This uneven distribution of emergency boat resources suggests critical gaps in flood-time accessibility, especially in peripheral and low-lying neighbourhoods. The model highlights strategic locations where new or relocated boat points could enhance flood resilience, supporting the development of hybrid land-water evacuation networks. Although primarily serving to evaluate current operational capacities, the accessibility model also establishes a baseline for future resilience strategies, enabling Chennai to incorporate waterbased mobility into its urban adaptation planning.
 
 Measures NAINr800m
 
