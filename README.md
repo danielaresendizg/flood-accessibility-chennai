@@ -52,7 +52,7 @@ Full map atlas: [`figures/chennai_maps.pdf`](figures/chennai_maps.pdf).
 ## Methodology (overview)
 
 <p align="center">
-  <img src="docs/diagrams/methodology_framework_chennai.png" width="92%" alt="Methodological framework for flood-accessibility modelling">
+  <img src="docs/diagrams/methodology_framework_chennai.pdf" width="92%" alt="Methodological framework for flood-accessibility modelling">
 </p>
 
 | Step | Method | Tools |

@@ -7,6 +7,9 @@
 \usepackage{booktabs}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage[round,authoryear]{natbib}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{setspace}
@@ -66,6 +69,8 @@ The method reframes resilience not as physical resistance to flooding, but as th
 \input{sections/06_conclusion}
 
 \section{References}
-\input{sections/07_references}
+\nocite{*}
+\bibliographystyle{apalike}
+\bibliography{references}
 
 \end{document}

@@ -40,3 +40,11 @@ latex/**/*.toc
 latex/**/*.lof
 latex/**/*.lot
 latex/**/*.pdf
+
+# Diagram build artifacts (optional local builds)
+docs/diagrams/*.aux
+docs/diagrams/*.fdb_latexmk
+docs/diagrams/*.fls
+docs/diagrams/*.log
+docs/diagrams/*.out
+docs/diagrams/*.synctex.gz

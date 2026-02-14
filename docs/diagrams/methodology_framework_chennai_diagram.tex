@@ -1,0 +1,94 @@
+% TikZ diagram only (for inclusion in papers).
+\begin{tikzpicture}[
+  font=\sffamily,
+  >=Latex,
+  node distance=6mm and 10mm,
+  stageLabel/.style={font=\small, align=left},
+  bar/.style={fill=black, rounded corners=2pt, text=white, font=\small\bfseries, inner xsep=8pt, inner ysep=6pt, minimum width=6.2cm, align=center},
+  box/.style={draw, rounded corners=2pt, fill=white, font=\scriptsize, inner xsep=6pt, inner ysep=5pt, align=center, minimum width=3.2cm},
+  boxWide/.style={box, minimum width=4.0cm},
+  outbox/.style={draw, rounded corners=2pt, fill=gray!20, font=\scriptsize\bfseries, inner xsep=6pt, inner ysep=6pt, align=center, minimum width=4.0cm},
+  outSmall/.style={outbox, font=\scriptsize, minimum width=3.2cm},
+  arrow/.style={-Latex, line width=0.5pt},
+]
+
+% --- Left column (Stages 1–2) ---
+\node[stageLabel] (s1lbl) at (0, 3.5) {stage 1};
+\node[bar, below=1mm of s1lbl, minimum width=3.6cm] (s1bar) {floods impact on spatial\\configuration};
+\node[box, below=of s1bar] (s1a) {normal conditions\\street network\\r3000 / r800};
+\node[box, below=of s1a] (s1b) {flood model (100-year return):\\segment deletion and penalty\\levels};
+\node[box, below=of s1b] (s1c) {street network under flood conditions\\r3000 / r800};
+
+\node[stageLabel, below=14mm of s1c] (s2lbl) {stage 2};
+\node[bar, below=1mm of s2lbl, minimum width=3.6cm] (s2bar) {urban systems and services\\exposure};
+\node[box, below=of s2bar, minimum width=3.6cm] (s2a) {land use};
+\node[box, below=of s2a, minimum width=3.6cm] (s2b) {health};
+\node[box, below=of s2b, minimum width=3.6cm] (s2c) {education};
+\node[box, below=of s2c, minimum width=3.6cm] (s2d) {slums};
+\node[box, below=of s2d, minimum width=3.6cm] (s2e) {shelters};
+
+% --- Right column (Stages 3–4) ---
+\begin{scope}[xshift=7.8cm]
+  \node[stageLabel] (s3lbl) at (0, 3.5) {stage 3};
+  \node[bar] (s3bar) at (1.9, 3.05) {global-scale resilience strategies};
+
+  % Stage 3 left stack
+  \node[boxWide, below=8mm of s3bar, xshift=-2.15cm] (g1a) {population density};
+  \node[boxWide, below=of g1a] (g1b) {nachr3000m (core 20\%)\\normal condition};
+  \node[boxWide, below=of g1b] (g1c) {nachr3000m\\flood condition};
+  \node[boxWide, below=of g1c] (g1d) {critical infrastructure};
+  \node[outSmall, below=of g1d] (g1o) {priority emergency\\corridors\\\vspace{1mm}\\structural resilience\\strategies in transport\\infrastructure};
+
+  % Stage 3 middle stack
+  \node[boxWide, right=12mm of g1a] (g2a) {Dem (copernicus)};
+  \node[boxWide, below=of g2a] (g2b) {waterways network};
+  \node[boxWide, below=of g2b] (g2c) {high risk zones};
+  \node[outSmall, below=of g2c] (g2o) {designated zones for\\water-sensitive urban\\design (WSD)};
+
+  % Stage 3 right stack
+  \node[boxWide, right=12mm of g2a] (g3a) {waterways network};
+  \node[boxWide, below=of g3a] (g3b) {high risk streets\\network};
+  \node[outSmall, below=of g3b] (g3o) {waterway and street\\network during extreme\\events};
+
+  % connectors stage 3
+  \draw[arrow] (g1a) -- (g1b);
+  \draw[arrow] (g1b) -- (g1c);
+  \draw[arrow] (g1c) -- (g1d);
+  \draw[arrow] (g1d) -- (g1o);
+
+  \draw[arrow] (g2a) -- (g2b);
+  \draw[arrow] (g2b) -- (g2c);
+  \draw[arrow] (g2c) -- (g2o);
+
+  \draw[arrow] (g3a) -- (g3b);
+  \draw[arrow] (g3b) -- (g3o);
+
+  % Stage 4
+  \node[stageLabel] (s4lbl) at (0, -0.3) {stage 4};
+  \node[bar] (s4bar) at (1.9, -0.75) {local-scale resilience strategies};
+
+  \node[boxWide, below=8mm of s4bar, xshift=-2.15cm] (l1a) {population density};
+  \node[boxWide, below=of l1a] (l1b) {nachr3000m\\flood condition};
+  \node[boxWide, below=of l1b] (l1c) {nachr800m\\flood condition};
+  \node[boxWide, below=of l1c] (l1d) {10 clusters (k-means)};
+  \node[outSmall, below=of l1d] (l1o) {assessment of shelter\\placement\\\vspace{1mm}\\identification of safe-\\accessibility priority\\zones};
+
+  \node[boxWide, right=12mm of l1a] (l2a) {waterway and street\\network during extreme\\events};
+  \node[boxWide, below=of l2a] (l2b) {deployment of emergency\\boats};
+  \node[outSmall, below=of l2b] (l2o) {assessment of boat\\deployment efficiency\\under flood conditions};
+
+  \draw[arrow] (l1a) -- (l1b);
+  \draw[arrow] (l1b) -- (l1c);
+  \draw[arrow] (l1c) -- (l1d);
+  \draw[arrow] (l1d) -- (l1o);
+
+  \draw[arrow] (l2a) -- (l2b);
+  \draw[arrow] (l2b) -- (l2o);
+\end{scope}
+
+% --- Decorative bracket between left and right blocks ---
+\draw[line width=0.7pt] (3.4, 3.1) -- (3.4, -3.3);
+\draw[line width=0.7pt] (3.4, 3.1) .. controls (3.8, 3.1) and (3.9, 3.1) .. (4.2, 3.1);
+\draw[line width=0.7pt] (3.4, -3.3) .. controls (3.8, -3.3) and (3.9, -3.3) .. (4.2, -3.3);
+
+\end{tikzpicture}
