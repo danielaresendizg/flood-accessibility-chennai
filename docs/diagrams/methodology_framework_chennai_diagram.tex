@@ -63,9 +63,9 @@
   \draw[arrow] (g3a) -- (g3b);
   \draw[arrow] (g3b) -- (g3o);
 
-  % Stage 4
-  \node[stageLabel] (s4lbl) at (0, -0.3) {stage 4};
-  \node[bar] (s4bar) at (1.9, -0.75) {local-scale resilience strategies};
+  % Stage 4 (placed well below Stage 3 to avoid overlaps)
+  \node[stageLabel] (s4lbl) at (0, -6.2) {stage 4};
+  \node[bar] (s4bar) at (1.9, -6.65) {local-scale resilience strategies};
 
   \node[boxWide, below=8mm of s4bar, xshift=-2.15cm] (l1a) {population density};
   \node[boxWide, below=of l1a] (l1b) {nachr3000m\\flood condition};
@@ -87,8 +87,8 @@
 \end{scope}
 
 % --- Decorative bracket between left and right blocks ---
-\draw[line width=0.7pt] (3.4, 3.1) -- (3.4, -3.3);
+\draw[line width=0.7pt] (3.4, 3.1) -- (3.4, -8.6);
 \draw[line width=0.7pt] (3.4, 3.1) .. controls (3.8, 3.1) and (3.9, 3.1) .. (4.2, 3.1);
-\draw[line width=0.7pt] (3.4, -3.3) .. controls (3.8, -3.3) and (3.9, -3.3) .. (4.2, -3.3);
+\draw[line width=0.7pt] (3.4, -8.6) .. controls (3.8, -8.6) and (3.9, -8.6) .. (4.2, -8.6);
 
 \end{tikzpicture}
