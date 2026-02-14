@@ -1,0 +1,26 @@
+# Python dependencies for flood-accessibility-chennai project
+# Install with: pip install -r requirements.txt
+# Or (recommended for GDAL): conda install --file requirements.txt -c conda-forge
+
+# Core geospatial packages
+geopandas>=0.12.0           # Vector data manipulation
+rasterio>=1.3.0             # Raster I/O
+gdal>=3.6.0                 # Geospatial Data Abstraction Library (conda recommended)
+
+# Scientific computing
+numpy>=1.21.0               # Numerical arrays
+scipy>=1.7.0                # Statistical distributions, optimization
+pandas>=1.3.0               # Data frame operations
+
+# Optional but recommended
+fiona>=1.9.0                # Vector I/O (often installed with geopandas)
+shapely>=1.8.0              # Geometric operations
+pyproj>=3.0.0               # Coordinate reference systems
+matplotlib>=3.4.0           # Plotting (for validation reports)
+
+# Data formats
+openpyxl>=3.0.0             # Excel support (if needed for data import)
+
+# Development (optional)
+# pytest>=6.0.0             # Testing framework
+# black>=21.0               # Code formatting
