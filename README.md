@@ -20,7 +20,7 @@ The method reframes resilience not as physical resistance to flooding, but as th
 ## Methodology (overview)
 
 <p align="center">
-  <img src="docs/diagrams/methodology_framework_chennai.pdf" width="92%" alt="Methodological framework for flood-accessibility modelling">
+  <img src="docs/diagrams/methodology_framework_chennai.png" width="92%" alt="Methodological framework for flood-accessibility modelling">
 </p>
 
 LaTeX/TikZ source: [`docs/diagrams/methodology_framework_chennai_diagram.tex`](docs/diagrams/methodology_framework_chennai_diagram.tex).
