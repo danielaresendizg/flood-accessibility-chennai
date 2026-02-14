@@ -1,8 +1,9 @@
 # Severed Accessibility and Urban Resilience: Flood Risk in Chennai, India
 
-**Adaptive Design and Research Paper** | MSc Urban Development Planning | UCL The Bartlett | 2021
+**BARC0026: Analytical Design Research Project Coursework** | MSc in Space Syntax: Architecture and Cities | The Bartlett School of Architecture, UCL | 2021
 
-**Author:** Daniela Resendiz Garcia
+**Author:** Daniela Reséndiz García  
+**Supervisor:** Prof. Alan Penn
 
 ---
 
@@ -37,18 +38,18 @@ The analysis is structured across four stages:
 
 ### Key Data Sources
 
-- OpenStreetMap for street network data
-- Land use maps from the Chennai Metropolitan Development Authority
-- Flood inundation maps (100-year return scenario; plus historic flood context)
-- Satellite imagery (Google Earth, Sentinel-2)
-- DEM (Copernicus) and waterways (India Water Resources Information System)
+- Street network + base layers (OpenStreetMap / GIS basemaps)
+- 100-year return period flood model (OpenCity Data)
+- DEM (Copernicus GLO-30) + waterways (India Water Resources Information System)
+- Buildings (Google Open Buildings) and critical facilities (e.g., GCC datasets)
+- Remote sensing / imagery used for interpretation and mapping export (QGIS)
 
 ## Data (overview)
 
 **For complete data sources and download instructions, see [`DATA_SOURCES.md`](DATA_SOURCES.md).**
 
 Large datasets are hosted on Google Drive (GitHub size limits):
-- **Google Drive folder (public):** _TODO_ (paste the shared folder link here)
+- **Google Drive folder (public):** https://drive.google.com/open?id=1cVT_UkIAJWT-I-wsGkITIKPlJPdiMdUH&usp=drive_fs
 
 Recommended Drive structure:
 
@@ -56,12 +57,12 @@ Recommended Drive structure:
 |--------|----------|
 | `network/` | OSM roads, segment analysis outputs (DepthmapX/QGIS) |
 | `flood/` | Flood extent / return period layers |
-| `land_use/` | CMDA land use maps |
+| `land_use/` | Land-use / land-cover layers |
 | `shelters_services/` | Shelter locations + critical services (health/education/slums) |
 | `boundaries/` | Admin boundaries / study area polygon |
 | `exports/` | Final merged layers used for QGIS map export |
 
-Current local data location (your machine): `/Users/danielaresendiz/Library/CloudStorage/OneDrive-UniversityCollegeLondon(2)/SSMAD_2/Project`
+Local data location (author machine; not in repo): `/Users/danielaresendiz/Library/CloudStorage/OneDrive-UniversityCollegeLondon(2)/SSMAD_2/Project`
 
 ## Paper (PDF + LaTeX)
 
@@ -97,9 +98,9 @@ Full map atlas (QGIS export): [`figures/chennai_maps.pdf`](figures/chennai_maps.
 
 ## Research Questions
 
-1. How does street network configuration influence flood vulnerability?
-2. What role can blue-green infrastructure play in enhancing flood resilience?
-3. How can Space Syntax analysis inform flood-resilient urban design?
+1. How do floods reshape the spatial accessibility of urban street networks?
+2. How does the reconfigured urban structure affect critical systems such as health services, education, land use, slums, and shelters?
+3. How can resilience be improved at both global and local scales by strategically enhancing accessibility to critical services during flood events?
 
 ## Key Findings
 
@@ -133,6 +134,10 @@ The project follows a four-stage pipeline:
 3. **Stage 3 (Global strategies):** derive emergency corridors and WSUD zones from NACHr3000 + DEM/waterways.
 4. **Stage 4 (Local strategies):** identify safe clusters and evaluate shelter/boat placement under flood conditions.
 
+## Scripts (minimal)
+
+This project is primarily a GIS + Space Syntax workflow (DepthmapX + QGIS). A few small Python helpers used for the flood-model inputs and checks live in [`code/python/`](code/python/) (see README in that folder).
+
 ## Software and Tools
 
 - **DepthmapX** - Space Syntax segment angular analysis
@@ -145,7 +150,7 @@ If you use this work, please cite:
 
 ```
 Resendiz Garcia, D. (2021). Street Network and Blue-Green Infrastructure for Flood Resilience:
-Chennai, India. MSc Urban Development Planning, UCL The Bartlett.
+Chennai, India. MSc in Space Syntax: Architecture and Cities, The Bartlett School of Architecture, UCL.
 ```
 
 ## License

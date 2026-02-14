@@ -20,7 +20,7 @@ Recommended subfolders:
 Chennai_Flood_Accessibility_Data/
 ├── network/                 # OSM roads / segment analysis outputs
 ├── flood/                   # Flood extent / return period layers
-├── land_use/                # CMDA land use maps
+├── land_use/                # Land-use / land-cover layers
 ├── shelters_services/       # Shelter locations, critical services
 ├── boundaries/              # Admin boundaries / study area polygon
 └── exports/                 # Any final merged layers used in QGIS maps
@@ -44,7 +44,7 @@ Your full project datasets currently live here:
 
 ## Public link (recommended)
 
-- **Google Drive folder (public):** _TODO_
+- **Google Drive folder (public):** https://drive.google.com/open?id=1cVT_UkIAJWT-I-wsGkITIKPlJPdiMdUH&usp=drive_fs
 
 ## Notes
 

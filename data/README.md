@@ -4,7 +4,7 @@ This repository does not include large geospatial datasets. Use the Google Drive
 
 ## Download
 
-- **Google Drive folder (public):** _TODO_
+- **Google Drive folder (public):** https://drive.google.com/open?id=1cVT_UkIAJWT-I-wsGkITIKPlJPdiMdUH&usp=drive_fs
 
 ## Local location (your machine)
 
