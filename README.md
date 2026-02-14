@@ -1,6 +1,6 @@
 # Severed Accessibility and Urban Resilience: Flood Risk in Chennai, India
 
-**BARC0026: Analytical Design Research Project Coursework** | MSc in Space Syntax: Architecture and Cities | The Bartlett School of Architecture, UCL | 2021
+**BARC0026: Analytical Design Research Project Coursework** | MSc in Space Syntax: Architecture and Cities | The Bartlett School of Architecture, UCL | 2025
 
 **Author:** Daniela Resendiz Garcia
 **Supervisor:** Prof. Alan Penn
@@ -254,12 +254,12 @@ This project is primarily a **GIS + Space Syntax workflow** (DepthmapX + QGIS). 
 If you use this work, please cite:
 
 ```bibtex
-@mastersthesis{resendiz2021flood,
+@mastersthesis{resendiz2025flood,
   author       = {Resendiz Garcia, Daniela},
   title        = {Severed Accessibility and Urban Resilience:
                   A multi-scalar analysis of flood risk in Chennai},
   school       = {UCL The Bartlett School of Architecture},
-  year         = {2021},
+  year         = {2025},
   type         = {{BARC0026} Analytical Design Research Project},
   url          = {https://github.com/danielaresendizg/flood-accessibility-chennai}
 }
@@ -267,13 +267,13 @@ If you use this work, please cite:
 
 For the final submission PDF specifically:
 ```bibtex
-@mastersthesis{resendiz2021adrp,
+@mastersthesis{resendiz2025adrp,
   author       = {Resendiz Garcia, Daniela},
   title        = {Severed Accessibility and Urban Resilience:
                   A multi-scalar analysis of flood risk in Chennai},
   school       = {UCL The Bartlett School of Architecture},
-  year         = {2021},
-  note         = {ADRP final submission, 2025-05},
+  year         = {2025},
+  note         = {ADRP final submission},
   url          = {https://github.com/danielaresendizg/flood-accessibility-chennai/blob/main/papers/210525_ADRP_DanielaResendiz.pdf}
 }
 ```

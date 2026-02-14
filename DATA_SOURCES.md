@@ -159,12 +159,12 @@ These datasets can be accessed directly:
 If you use these datasets, please cite the original data providers:
 
 ```bibtex
-@mastersthesis{resendiz2021flood,
+@mastersthesis{resendiz2025flood,
   author       = {Resendiz Garcia, Daniela},
   title        = {Severed Accessibility and Urban Resilience:
                   A multi-scalar analysis of flood risk in Chennai},
   school       = {UCL The Bartlett School of Architecture},
-  year         = {2021},
+  year         = {2025},
   url          = {https://github.com/danielaresendizg/flood-accessibility-chennai}
 }
 ```
