@@ -36,25 +36,26 @@ The analysis follows four stages:
 
 ## Key Results
 
-**Accessibility under normal vs. flood conditions (r3000 and r800)**
+**Accessibility under normal vs. flood conditions (NAINr3000 and NACHr3000)**
 <p align="center">
-  <img src="figures/readme/chennai_maps_p02_accessibility.png" width="95%" alt="Accessibility comparison: normal vs flood conditions">
+  <img src="latex/figures/fragment.jpg" width="95%" alt="Global-scale accessibility: normal vs flood conditions showing NAIN and NACH at r3000">
 </p>
 
-Global accessibility (NAINr3000) dropped by **19.74%** and local accessibility (NAINr800) by **15.23%** under a 100-year flood scenario, with 6.56% of street segments lost entirely.
+Global accessibility (NAINr3000) dropped by **19.74%** and local accessibility (NAINr800) by **15.23%** under a 100-year flood scenario, with 6.56% of street segments lost entirely. The flood condition reveals five disconnected urban fragments (F1--F5), each with distinct vulnerability profiles.
 
-**Population density, accessibility, and safe zone identification**
+**Global-scale strategy: emergency routes and priority corridors**
 <p align="center">
-  <img src="figures/readme/chennai_maps_p04_density_accessibility.png" width="95%" alt="Population density and accessibility analysis">
+  <img src="latex/figures/emergency_main_connections.jpg" width="95%" alt="Global-scale resilience: population density, main connections, emergency routes, and urban design strategies">
 </p>
 
-**Shelter evaluation and priority emergency corridors**
+Emergency priority routes were identified by merging the top 20% accessible corridors (NACHr3000) under normal conditions with flood-adjusted accessibility. Intervention strategies include gutter adjustments, raised evacuation pathways, and bridge reinforcement.
+
+**Local-scale strategy: safe zones, shelter evaluation, and boat deployment**
 <p align="center">
-  <img src="figures/readme/chennai_maps_p05_shelters.png" width="48%" alt="Safe zones and shelter evaluation">
-  <img src="figures/readme/chennai_maps_p06_priority_corridors.png" width="48%" alt="Priority emergency corridors">
+  <img src="latex/figures/safe.zones_shelters.jpg" width="95%" alt="Local-scale resilience: k-means clustering, safe zones, shelter accessibility, and boat evaluation">
 </p>
 
-48.6% of existing shelters were located over 400 m from highly accessible areas, highlighting critical gaps in emergency infrastructure planning.
+K-means clustering identified priority safe zones (Clusters 7 and 9). 48.6% of existing shelters were located over 400 m from highly accessible areas, highlighting critical gaps in emergency infrastructure planning.
 
 ## Repository Structure
 
@@ -75,7 +76,6 @@ flood-accessibility-chennai/
 │   ├── python/flood_model/         # Data preparation scripts
 │   └── qgis/                       # QGIS projects and styles
 │
-├── figures/readme/                 # Figures for this README
 ├── docs/diagrams/                  # Methodology diagram (TikZ source + PNG)
 ├── DATA_SOURCES.md                 # Data access and download guide
 └── requirements.txt                # Python dependencies
