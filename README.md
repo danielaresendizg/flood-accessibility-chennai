@@ -17,10 +17,6 @@ Results show that accessibility degradation is spatially uneven. Compact urban f
 
 The method reframes resilience not as physical resistance to flooding, but as the preservation of spatial connection under disruption. It is transferable to diverse urban contexts and leverages open-access spatial and environmental data, enabling scalable diagnostics without relying on intensive modelling or proprietary inputs.
 
-<p align="center">
-  <img src="figures/readme/hero_chennai_flood.webp" width="62%" alt="Chennai flood (2015) photo">
-</p>
-
 ## Methodology (overview)
 
 <p align="center">
