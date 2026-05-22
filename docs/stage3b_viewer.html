@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stage 3b — Floodplain Strategy</title>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    .maplibregl-ctrl-attrib,.maplibregl-ctrl-logo { display:none !important; }
+    .maplibregl-ctrl-zoom-in,.maplibregl-ctrl-zoom-out,.maplibregl-ctrl-compass { width:20px !important; height:20px !important; }
+    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon,.maplibregl-ctrl-compass .maplibregl-ctrl-icon { background-size:12px !important; }
+    .maplibregl-ctrl-scale { font-size:8px !important; height:10px !important; line-height:9px !important; padding:0 4px !important; border-width:1px !important; }
+    html, body { height:100%; overflow:hidden; background:#050505; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:#fff; }
+
+    #map { position:absolute; top:0; left:0; width:50%; height:100%; }
+
+    #info {
+      position:absolute; top:0; right:0; width:50%; height:100%;
+      background:#000; border-left:1px solid #1a1a1a;
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:48px 48px; overflow:hidden; gap:0;
+    }
+    .stage-label { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#0000FF; margin-bottom:6px; }
+    .info-title { font-size:clamp(1rem,1.8vw,1.5rem); font-weight:900; color:#fff; line-height:1.2; margin-bottom:12px; }
+    .info-text { font-size:11px; color:#fff; line-height:1.7; margin-bottom:20px; max-width:440px; }
+
+    .strat-label { font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#fff; margin-bottom:10px; }
+    .eval-title { font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:#fff; margin-bottom:6px; font-weight:700; }
+    .strat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; max-width:360px; }
+    .strat-item { display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:0; }
+    .strat-item img { width:100%; max-width:80px; height:72px; object-fit:contain; opacity:0.9; }
+    .strat-item span { font-size:8px; text-transform:uppercase; letter-spacing:.06em; color:#fff; text-align:center; line-height:1.4; margin-top:6px; }
+
+    #panel {
+      position:absolute; top:12px; left:12px; z-index:10;
+      background:rgba(0,0,0,0.35); backdrop-filter:blur(8px); border-radius:6px;
+      padding:8px 12px; display:flex; flex-direction:column; gap:8px;
+    }
+    .tog { display:flex; align-items:center; gap:7px; cursor:pointer; padding:3px 0; border-radius:0; border:none; background:transparent; transition:color 120ms, opacity 120ms; opacity:0.4; }
+    .tog .dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .tog-text { display:flex; flex-direction:column; gap:1px; }
+    .tog span { font-size:8px; font-weight:400; text-transform:uppercase; letter-spacing:.04em; color:#fff; }
+    .tog small { font-size:7px; color:#aaa; font-weight:400; text-transform:none; letter-spacing:0; line-height:1.3; }
+    .tog.active { opacity:1; }
+    .tog.active span { color:#fff; }
+    .tog:hover { opacity:0.75; }
+    .tog.active small { color:#aaa; }
+
+
+    #loading { position:absolute; top:50%; left:25%; transform:translate(-50%,-50%); background:rgba(0,0,0,.8); padding:10px 18px; border-radius:4px; font-size:11px; color:#fff; display:none; z-index:20; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="panel">
+    <div class="tog active" data-layer="floodplain">
+      <div class="dot" style="background:#3b82f6;"></div>
+      <div class="tog-text">
+        <span>Floodplain excavation</span>
+        <small>Low-lying open spaces for drainage restoration</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="density">
+      <div class="dot" style="background:#f59e0b;"></div>
+      <div class="tog-text">
+        <span>Density reduction</span>
+        <small>Residential areas in high flood-risk zones</small>
+      </div>
+    </div>
+    <div class="tog active">
+      <div class="dot" style="background:#0000FF;"></div>
+      <div class="tog-text">
+        <span>Rivers</span>
+        <small>Cooum, Adyar, Kosasthalaiyar</small>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="loading">Loading…</div>
+
+  <!-- Right panel -->
+  <div id="info">
+    <div class="info-title">Floodplain &amp; density strategy</div>
+    <p class="info-text">Using a DEM (Copernicus GLO-30) and waterway data (IWRS), the city's lowest-lying areas were cross-referenced with high flood-risk zones. Large open spaces within this overlap are proposed for <strong style="color:#3b82f6;">floodplain excavation</strong> (blue), restoring natural drainage capacity, excluding streets with high local integration (NAINr800) to preserve the existing pedestrian network. Areas where residential buildings (Google Open Buildings) coincide with high flood-risk are designated for <strong style="color:#f59e0b;">density reduction</strong> (orange), limiting future exposure through adaptive urban planning.</p>
+
+    <div>
+      <div class="eval-title" style="margin-bottom:6px;">Proposed interventions</div>
+      <div style="display:flex;gap:20px;">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+          <img src="assets/floodplain_excavation.svg" alt="Floodplain excavation" style="width:44px;height:44px;object-fit:contain;opacity:0.9;">
+          <span style="font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:#fff;line-height:1.4;text-align:center;">Floodplain excavation</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const map = new maplibregl.Map({
+      container:"map", style:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      center:[80.2707,13.0827], zoom:9.5, pitch:0, antialias:true
+    });
+    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+    map.addControl(new maplibregl.ScaleControl({unit:"metric"}), "bottom-left");
+
+    const loadingEl = document.getElementById("loading");
+    const state = { visible: new Set(["floodplain","density"]) };
+
+    const LAYERS = {
+      floodplain: { url:"./data/floodplain_excavation_final.geojson", fill:"rgba(59,130,246,0.4)", stroke:"#3b82f6" },
+      density:    { url:"./data/less_density_final.geojson",          fill:"rgba(245,158,11,0.55)", stroke:"#f59e0b" },
+    };
+
+    async function loadLayer(id) {
+      const cfg = LAYERS[id];
+      loadingEl.style.display = "block";
+      try {
+        const res = await fetch(cfg.url);
+        if (!res.ok) {
+          console.warn(`${id} not available (${res.status})`);
+          loadingEl.style.display = "none";
+          return;
+        }
+        const data = await res.json();
+        if (!map.getSource(id)) map.addSource(id, { type:"geojson", data });
+        map.addLayer({ id:`${id}-fill`, type:"fill", source:id,
+          paint:{ "fill-color":cfg.fill, "fill-antialias":false }
+        });
+        map.addLayer({ id:`${id}-line`, type:"line", source:id,
+          paint:{ "line-color":cfg.stroke, "line-width":1, "line-opacity":0.8 }
+        });
+      } catch(e) {
+        console.warn(`${id} failed:`, e);
+      } finally {
+        loadingEl.style.display = "none";
+      }
+    }
+
+    document.querySelectorAll("[data-layer]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.layer;
+        const vis = state.visible.has(id) ? "none" : "visible";
+        [`${id}-fill`,`${id}-line`].forEach(lid => {
+          if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", vis);
+        });
+        if (vis === "visible") { state.visible.add(id); btn.classList.add("active"); }
+        else { state.visible.delete(id); btn.classList.remove("active"); }
+      });
+    });
+
+    map.on("load", async () => {
+      map.setPaintProperty("water", "fill-color", "#000066");
+      // Rivers — same as context map
+      const rivData = await (await fetch("./data/chennai_rivers.geojson")).json();
+      map.addSource("src-rivers", { type:"geojson", data:rivData });
+      map.addLayer({ id:"lyr-rivers", type:"fill", source:"src-rivers",
+        paint:{ "fill-color":"#0000FF", "fill-opacity":1 }
+      });
+
+      await loadLayer("floodplain");
+      await loadLayer("density");
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stage 3 — Global Resilience</title>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    .maplibregl-ctrl-attrib,.maplibregl-ctrl-logo { display:none !important; }
+    .maplibregl-ctrl-zoom-in,.maplibregl-ctrl-zoom-out,.maplibregl-ctrl-compass { width:20px !important; height:20px !important; }
+    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon,.maplibregl-ctrl-compass .maplibregl-ctrl-icon { background-size:12px !important; }
+    .maplibregl-ctrl-scale { font-size:8px !important; height:10px !important; line-height:9px !important; padding:0 4px !important; border-width:1px !important; }
+    html, body { height:100%; overflow:hidden; background:#050505; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:#fff; }
+
+    #map { position:absolute; top:0; left:0; width:50%; height:100%; }
+
+    /* ── Right panel ── */
+    #info {
+      position:absolute; top:0; right:0; width:50%; height:100%;
+      background:#000; border-left:1px solid #1a1a1a;
+      display:flex; flex-direction:column; justify-content:space-between;
+      padding:48px 48px; overflow:hidden; gap:0;
+    }
+    .stage-label { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#0000FF; margin-bottom:6px; }
+    .info-title { font-size:clamp(1rem,1.8vw,1.5rem); font-weight:900; color:#fff; line-height:1.2; margin-bottom:12px; }
+    .info-text { font-size:11px; color:#fff; line-height:1.7; margin-bottom:20px; max-width:440px; }
+
+    .strat-label { font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#fff; margin-bottom:10px; }
+    .strat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+    .strat-item { display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:0; }
+    .strat-item img { width:100%; max-width:80px; height:72px; object-fit:contain; opacity:0.9; }
+    .strat-item span { font-size:8px; text-transform:uppercase; letter-spacing:.06em; color:#fff; text-align:center; line-height:1.4; margin-top:6px; }
+
+    /* ── NACH chart ── */
+    .nach-row { display:flex; align-items:center; gap:8px; margin-bottom:3px; }
+    .nach-lbl { font-size:9px; color:#fff; width:60px; flex-shrink:0; letter-spacing:.02em; }
+    .nach-lbl.bold { font-weight:700; }
+    .nach-track { flex:1; height:6px; background:transparent; border-bottom:1px solid #1a1a1a; position:relative; }
+    .nach-fill { position:absolute; top:50%; left:0; height:4px; transform:translateY(-50%); border-radius:0; }
+    .nach-val { font-size:9px; color:#fff; width:44px; flex-shrink:0; text-align:right; }
+    .nach-val.bold { font-weight:700; }
+    .nach-sep { border:none; border-top:1px solid #222; margin:5px 0; }
+
+
+    /* ── Map controls ── */
+    #panel {
+      position:absolute; top:12px; left:12px; z-index:10;
+      background:rgba(0,0,0,0.35); backdrop-filter:blur(8px); border-radius:6px;
+      padding:8px 12px; display:flex; flex-direction:column; gap:8px;
+    }
+    .tog {
+      display:flex; align-items:center; gap:7px; cursor:pointer;
+      padding:3px 0; border-radius:0; border:none;
+      background:transparent; transition:color 120ms;
+    }
+    .tog .dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .tog-icon { width:14px; height:14px; flex-shrink:0; opacity:0.9; }
+    .tog-text { display:flex; flex-direction:column; gap:1px; }
+    .tog span { font-size:8px; font-weight:400; text-transform:uppercase; letter-spacing:.04em; color:#fff; }
+    .tog small { font-size:7px; color:#aaa; font-weight:400; text-transform:none; letter-spacing:0; line-height:1.3; }
+    .tog.active { opacity:1; }
+    .tog.active span { color:#fff; }
+    .tog:hover { opacity:0.75; }
+    .tog.active small { color:#aaa; }
+
+
+    #loading { position:absolute; top:50%; left:25%; transform:translate(-50%,-50%); background:rgba(0,0,0,.8); padding:10px 18px; border-radius:4px; font-size:11px; color:#fff; display:none; z-index:20; }
+    #tooltip { position:fixed; display:none; background:#111; border:1px solid #333; padding:6px 10px; border-radius:4px; font-size:10px; color:#fff; pointer-events:none; z-index:200; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- Map controls -->
+  <div id="panel">
+    <div class="tog active" data-layer="corridors">
+      <div class="tog-text">
+        <span>Street network</span>
+        <small>Flow (NACH r3000) under flood</small>
+        <div style="height:5px;border-radius:2px;background:linear-gradient(to right,#0000FF,#00CCFF,#00FF00,#FFFF00,#FF0000);margin-top:4px;width:100%;"></div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:#555;margin-top:1px;">
+          <span style="color:#aaa;">Low</span><span style="color:#aaa;">High</span>
+        </div>
+      </div>
+    </div>
+    <div class="tog active" data-layer="fragments">
+      <div class="dot" style="background:transparent;border:1px solid #fff;border-radius:2px;"></div>
+      <div class="tog-text">
+        <span>Fragments F1–F5</span>
+        <small>Disconnected areas under flood</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="connections">
+      <div class="dot" style="background:#ff0000;border-radius:2px;"></div>
+      <div class="tog-text">
+        <span>Main connections</span>
+        <small>Top 20% NACHr3000 emergency routes</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="health">
+      <svg class="tog-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" stroke-width="2"/>
+        <rect x="14" y="8" width="4" height="16" fill="#000"/>
+        <rect x="8" y="14" width="16" height="4" fill="#000"/>
+      </svg>
+      <div class="tog-text">
+        <span>Hospitals</span>
+        <small>Critical health infrastructure</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="airport">
+      <svg class="tog-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" stroke-width="2"/>
+        <path d="M16 6 L20 18 L28 16 L28 18 L20 21 L18 26 L14 26 L16 21 L8 18 L8 16 L12 18 Z" fill="#000"/>
+      </svg>
+      <div class="tog-text">
+        <span>Airport</span>
+        <small>Strategic evacuation node</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="port">
+      <svg class="tog-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" stroke-width="2"/>
+        <path d="M10 20 Q16 14 22 20" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M7 22 Q16 15 25 22" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <line x1="16" y1="10" x2="16" y2="20" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+        <line x1="11" y1="13" x2="21" y2="13" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div class="tog-text">
+        <span>Port</span>
+        <small>Key supply and logistics hub</small>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="loading">Loading…</div>
+  <div id="tooltip"></div>
+
+  <!-- Right panel -->
+  <div id="info">
+    <div class="info-title">Emergency routes</div>
+    <p class="info-text">The top 20% of routes by NACHr3000 under normal conditions form the backbone for emergency priority corridors. Cross-referenced with flood-adjusted accessibility, they identify which connections remain strategic when the city fractures, ensuring continuity to hospitals, the airport, the port, and the densest urban areas. Interventions are limited to this main connections network — well-connected routes that flood threatens but can recover. Street interventions target gutter inclination, raised evacuation pathways, and water-sensitive design; bridge interventions prioritise structural reinforcement and redundancy. Together they bring mean NACHr3000 from 0.664 back to 0.811.</p>
+
+    <div class="strat-label">Proposed interventions</div>
+    <div class="strat-grid">
+      <div class="strat-item">
+        <img src="assets/inclination_roads.svg" alt="Road inclination">
+        <span>Road inclination</span>
+      </div>
+      <div class="strat-item">
+        <img src="assets/gutter.svg" alt="Gutter">
+        <span>Gutter</span>
+      </div>
+      <div class="strat-item">
+        <img src="assets/raised_curbs.svg" alt="Raised curbs">
+        <span>Raised curbs</span>
+      </div>
+      <div class="strat-item">
+        <img src="assets/evacuation_routes.svg" alt="Evacuation routes">
+        <span>Evacuation routes</span>
+      </div>
+    </div>
+
+    <!-- NACHr3000m comparison chart -->
+    <div class="strat-label" style="margin-top:16px;">Mean NACHr3000m</div>
+    <div id="nach-chart">
+      <div class="nach-row">
+        <div class="nach-lbl bold">Normal</div>
+        <div class="nach-track"><div class="nach-fill" style="width:95.4%;background:#fff;opacity:0.9;"></div></div>
+        <div class="nach-val bold">0.811</div>
+      </div>
+      <div class="nach-row">
+        <div class="nach-lbl" style="color:#0000FF;">Flood</div>
+        <div class="nach-track"><div class="nach-fill" style="width:78.1%;background:#0000FF;opacity:0.8;"></div></div>
+        <div class="nach-val" style="color:#0000FF;">0.664</div>
+      </div>
+      <hr class="nach-sep">
+      <div class="nach-row">
+        <div class="nach-lbl" style="color:#888;">F1</div>
+        <div class="nach-track"><div class="nach-fill" style="width:93.6%;background:#888;"></div></div>
+        <div class="nach-val" style="color:#888;">0.796</div>
+      </div>
+      <div class="nach-row">
+        <div class="nach-lbl" style="color:#888;">F2</div>
+        <div class="nach-track"><div class="nach-fill" style="width:90.3%;background:#888;"></div></div>
+        <div class="nach-val" style="color:#888;">0.768</div>
+      </div>
+      <div class="nach-row">
+        <div class="nach-lbl" style="color:#ff4040;">F3</div>
+        <div class="nach-track"><div class="nach-fill" style="width:29.3%;background:#ff4040;"></div></div>
+        <div class="nach-val" style="color:#ff4040;">0.249</div>
+      </div>
+      <div class="nach-row">
+        <div class="nach-lbl" style="color:#888;">F4</div>
+        <div class="nach-track"><div class="nach-fill" style="width:87.4%;background:#888;"></div></div>
+        <div class="nach-val" style="color:#888;">0.743</div>
+      </div>
+      <div class="nach-row">
+        <div class="nach-lbl" style="color:#888;">F5</div>
+        <div class="nach-track"><div class="nach-fill" style="width:83.8%;background:#888;"></div></div>
+        <div class="nach-val" style="color:#888;">0.713</div>
+      </div>
+      <hr class="nach-sep">
+      <div class="nach-row">
+        <div class="nach-lbl bold">Proposed</div>
+        <div class="nach-track"><div class="nach-fill" style="width:95.5%;background:#fff;opacity:0.9;"></div></div>
+        <div class="nach-val bold">0.811</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const map = new maplibregl.Map({
+      container:"map", style:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      center:[80.2707,13.0827], zoom:9.5, pitch:0, antialias:true
+    });
+    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+    map.addControl(new maplibregl.ScaleControl({unit:"metric"}), "bottom-left");
+
+    const loadingEl = document.getElementById("loading");
+    const tooltip   = document.getElementById("tooltip");
+
+    const LAYERS = {
+      corridors:   { url:"./data/merged_seg_slim.geojson",   type:"line-nach", width:0.8 },
+      connections: { url:"./data/main_connections.geojson",  type:"line-glow", color:"#ff0000", width:5, opacity:0.4 },
+      health:      { url:"./data/hospitals.geojson",         type:"symbol", icon:"icon-hospital" },
+      airport:     { url:"./data/airport.geojson",           type:"symbol", icon:"icon-airport" },
+      port:        { url:"./data/port.geojson",              type:"symbol", icon:"icon-port" },
+    };
+
+    // SVG icons as data URLs
+    function svgToImg(svg, size=32) {
+      return new Promise(resolve => {
+        const blob = new Blob([svg], {type:"image/svg+xml"});
+        const url  = URL.createObjectURL(blob);
+        const img  = new Image(size, size);
+        img.onload = () => { resolve(img); URL.revokeObjectURL(url); };
+        img.src = url;
+      });
+    }
+
+    const ICONS = {
+      "icon-hospital": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+        <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" stroke-width="2"/>
+        <rect x="14" y="8" width="4" height="16" fill="#000"/>
+        <rect x="8" y="14" width="16" height="4" fill="#000"/>
+      </svg>`,
+      "icon-airport": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+        <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" stroke-width="2"/>
+        <path d="M16 6 L20 18 L28 16 L28 18 L20 21 L18 26 L14 26 L16 21 L8 18 L8 16 L12 18 Z" fill="#000"/>
+      </svg>`,
+      "icon-port": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+        <circle cx="16" cy="16" r="14" fill="#fff" stroke="#000" stroke-width="2"/>
+        <path d="M10 20 Q16 14 22 20" stroke="#000" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <path d="M7 22 Q16 15 25 22" stroke="#000" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+        <line x1="16" y1="10" x2="16" y2="20" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+        <line x1="11" y1="13" x2="21" y2="13" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+      </svg>`,
+    };
+
+    const state = { visible: new Set(Object.keys(LAYERS)) };
+
+    async function loadLayer(id) {
+      const cfg = LAYERS[id];
+      loadingEl.style.display = "block";
+      try {
+        const res = await fetch(cfg.url);
+        const data = await res.json();
+        if (!map.getSource(id)) map.addSource(id, { type:"geojson", data });
+
+        if (cfg.type === "line-nach") {
+          map.addLayer({ id, type:"line", source:id,
+            paint:{
+              "line-color": ["interpolate",["linear"],["coalesce",["get","nach"],0],
+                0.0,"#0000FF", 0.6,"#00CCFF", 0.9,"#00FF00", 1.1,"#FFFF00", 1.3,"#FF0000"
+              ],
+              "line-width": cfg.width,
+              "line-opacity": 0.85
+            }
+          });
+        } else if (cfg.type === "line-glow") {
+          // Glow layer (wide, very transparent)
+          map.addLayer({ id:`${id}-glow`, type:"line", source:id,
+            paint:{ "line-color":cfg.color, "line-width":cfg.width * 3, "line-opacity":0.04, "line-blur":2 }
+          });
+          // Main layer
+          map.addLayer({ id, type:"line", source:id,
+            paint:{ "line-color":cfg.color, "line-width":cfg.width, "line-opacity":cfg.opacity }
+          });
+        } else if (cfg.type === "line") {
+          map.addLayer({ id, type:"line", source:id,
+            paint:{ "line-color":cfg.color, "line-width":cfg.width, "line-opacity":cfg.opacity }
+          });
+        } else {
+          map.addLayer({ id, type:"symbol", source:id,
+            layout:{
+              "icon-image": cfg.icon,
+              "icon-size": 0.7,
+              "icon-allow-overlap": true,
+              "icon-ignore-placement": true,
+            }
+          });
+          const labels = { health:"Hospital", airport:"Airport", port:"Port" };
+          map.on("mouseenter", id, e => {
+            map.getCanvas().style.cursor = "pointer";
+            const p = e.features[0].properties;
+            tooltip.style.display = "block";
+            tooltip.innerHTML = `<strong>${p.name || p.Name || labels[id] || id}</strong>`;
+          });
+          map.on("mousemove", id, e => {
+            tooltip.style.left = (e.originalEvent.clientX + 14) + "px";
+            tooltip.style.top  = (e.originalEvent.clientY - 10) + "px";
+          });
+          map.on("mouseleave", id, () => {
+            map.getCanvas().style.cursor = "";
+            tooltip.style.display = "none";
+          });
+        }
+      } finally {
+        loadingEl.style.display = "none";
+      }
+    }
+
+    document.querySelectorAll("[data-layer]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.layer;
+        const vis = state.visible.has(id) ? "none" : "visible";
+        const adding = vis === "visible";
+        [id, `${id}-glow`, `${id}-fill`, `${id}-label`].forEach(lid => {
+          if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", vis);
+        });
+        if (adding) { state.visible.add(id); btn.classList.add("active"); }
+        else        { state.visible.delete(id); btn.classList.remove("active"); }
+      });
+    });
+
+    map.on("load", async () => {
+      map.setPaintProperty("water", "fill-color", "#000066");
+      // Load icons
+      for (const [id, svg] of Object.entries(ICONS)) {
+        const img = await svgToImg(svg, 32);
+        map.addImage(id, img);
+      }
+      // Fragments first (bottom layer)
+      const fragRes = await fetch("./data/fragments.geojson");
+      const fragData = await fragRes.json();
+      map.addSource("fragments", { type:"geojson", data: fragData });
+      map.addLayer({ id:"fragments-fill", type:"fill", source:"fragments",
+        paint:{ "fill-color":"transparent", "fill-opacity":0 }
+      });
+      map.addLayer({ id:"fragments", type:"line", source:"fragments",
+        paint:{ "line-color":"#ffffff", "line-width":1, "line-opacity":0.4, "line-dasharray":[4,3] }
+      });
+      // Fragment number labels as HTML markers — same style as Diagnosis
+      const labRes = await fetch("./data/fragments_labels.geojson");
+      const labData = await labRes.json();
+      labData.features.forEach(feat => {
+        const [lon, lat] = feat.geometry.coordinates;
+        const num = feat.properties.num;
+        const el = document.createElement("div");
+        el.textContent = num;
+        el.style.cssText = `
+          font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+          font-size:52px; font-weight:900;
+          color:rgba(255,255,255,0.45);
+          pointer-events:auto;
+          line-height:1;
+          text-shadow:0 0 20px rgba(255,255,255,0.15);
+          transform:translate(-50%,-50%);
+          cursor:default;
+          transition:color 200ms ease, text-shadow 200ms ease;
+        `;
+        el.addEventListener('mouseenter', () => {
+          el.style.color = 'rgba(255,255,255,1)';
+          el.style.textShadow = '0 0 30px rgba(255,255,255,0.6)';
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.color = 'rgba(255,255,255,0.45)';
+          el.style.textShadow = '0 0 20px rgba(255,255,255,0.15)';
+        });
+        new maplibregl.Marker({ element:el, anchor:"center" })
+          .setLngLat([lon, lat])
+          .addTo(map);
+      });
+
+      await loadLayer("corridors");
+      await loadLayer("connections");
+      await loadLayer("health");
+      await loadLayer("airport");
+      await loadLayer("port");
+    });
+  </script>
+
+</body>
+</html>

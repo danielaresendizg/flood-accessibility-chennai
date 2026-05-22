@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chennai Urban Growth</title>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; background:#000; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:#fff; overflow:hidden; }
+    .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo { display:none !important; }
+
+    #map { position:absolute; top:0; left:0; width:100%; height:100%; }
+
+    /* Slider panel */
+    #panel {
+      position:absolute; top:50%; left:16px; transform:translateY(-50%);
+      background:rgba(0,0,0,0.7); backdrop-filter:blur(8px);
+      border-radius:8px; padding:14px 12px;
+      display:flex; flex-direction:column; align-items:center; gap:8px;
+      z-index:10;
+    }
+    #year-label {
+      font-size:1.1rem; font-weight:900; color:#0000FF; text-align:center; min-width:40px;
+    }
+    #slider-body { display:flex; flex-direction:row; align-items:stretch; gap:8px; }
+    #ticks {
+      display:flex; flex-direction:column;
+      justify-content:space-between; align-items:flex-end;
+      height:200px;
+    }
+    .tick {
+      font-size:8px; color:#555; cursor:pointer; line-height:1;
+      transition:color 150ms; padding:0 2px;
+    }
+    .tick.active { color:#fff; font-weight:700; }
+    #slider {
+      writing-mode:vertical-lr;
+      direction:rtl;
+      -webkit-appearance:slider-vertical;
+      appearance:slider-vertical;
+      width:18px; height:200px;
+      accent-color:#0000FF; cursor:pointer;
+    }
+
+    /* Title + caption */
+  #map-title {
+    position:absolute; top:28px; left:32px; z-index:10;
+    pointer-events:none;
+  }
+  #map-title h2 {
+    font-size:clamp(1.4rem,2.5vw,2.2rem);
+    font-weight:900; color:#0000FF; line-height:1.1;
+    text-shadow:0 2px 12px rgba(0,0,0,0.8);
+  }
+  #map-caption {
+    position:absolute; bottom:12px; left:32px; z-index:10;
+    font-size:9px; color:rgba(255,255,255,0.5);
+    pointer-events:none;
+  }
+
+  #map-overlay-text {
+    position:absolute; bottom:40px; right:32px; z-index:10;
+    max-width:360px;
+    padding:0;
+    pointer-events:none;
+  }
+  #map-overlay-text p {
+    font-size:11px; line-height:1.6; color:rgba(255,255,255,0.85);
+    margin:0 0 10px;
+  }
+  #map-overlay-text p:last-child { margin-bottom:0; }
+
+  /* Land use legend */
+    #lu-legend {
+      display:none;
+      position:absolute; bottom:20px; left:80px;
+      background:rgba(0,0,0,0.75); backdrop-filter:blur(6px);
+      border-radius:6px; padding:10px 14px;
+      flex-direction:column; gap:4px; z-index:10;
+    }
+    #lu-legend .title { font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; margin-bottom:4px; }
+    #lu-legend .items { display:flex; flex-wrap:wrap; gap:5px 14px; }
+    .lu-item { display:flex; align-items:center; gap:5px; font-size:8px; color:#fff; }
+    .lu-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="map-title">
+  <h2 style="color:#fff;">Chennai: a city severed from its waterways</h2>
+</div>
+
+<div id="map-overlay-text">
+  <p>Historically shaped by colonial expansion, Chennai's urban growth evolved along its intricate network of rivers — the Cooum, Adyar, and Kosasthalaiyar. From an initial footprint of <strong>1.6 km²</strong> in 1633, the city expanded dramatically to over <strong>328 km²</strong> by 2006, progressively altering natural drainage patterns and intensifying flood vulnerability.</p>
+  <p>The severance of the once-symbiotic relationship between the urban fabric and its waterways has diminished the city's natural flood absorption capacity, transforming former floodplains and canal corridors into impermeable, fragmented landscapes increasingly susceptible to hydroclimatic extremes.</p>
+</div>
+
+<div id="map-caption">
+  Urban expansion of Chennai (1633–1976). Source: Greater Chennai Corporation (GCC)
+</div>
+
+<div id="panel">
+  <div id="year-label">1633</div>
+  <div id="slider-body">
+    <div id="ticks">
+      <span class="tick" data-idx="8">2006</span>
+      <span class="tick" data-idx="7">1976</span>
+      <span class="tick" data-idx="6">1971</span>
+      <span class="tick" data-idx="5">1963</span>
+      <span class="tick" data-idx="4">1943</span>
+      <span class="tick" data-idx="3">1875</span>
+      <span class="tick" data-idx="2">1798</span>
+      <span class="tick" data-idx="1">1733</span>
+      <span class="tick active" data-idx="0">1633</span>
+    </div>
+    <input id="slider" type="range" min="0" max="8" value="0" step="1">
+  </div>
+</div>
+
+<div id="lu-legend">
+  <div class="title" id="lu-legend-title">Land use</div>
+  <div class="items" id="lu-legend-items-1976" style="display:none;">
+    <div class="lu-item"><div class="lu-dot" style="background:#FFFF82"></div>Residential</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#FFD700"></div>Mix residential</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#FF4040"></div>Commercial</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#9B59B6"></div>Industrial</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#4A90D9"></div>Institutional</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#7DC67E"></div>Open space</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#C8E6A0"></div>Agricultural</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#A8D8EA"></div>Waterbody</div>
+  </div>
+  <div class="items" id="lu-legend-items-2006" style="display:none;">
+    <div class="lu-item"><div class="lu-dot" style="background:#FFFF82"></div>Residential</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#FF4040"></div>Commercial</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#9B59B6"></div>Industry</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#4A90D9"></div>Institutional</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#A8D8EA"></div>Waterbodies</div>
+    <div class="lu-item"><div class="lu-dot" style="background:#C8E6A0"></div>Expanded</div>
+  </div>
+</div>
+
+<script>
+const YEARS = ['1633','1733','1798','1875','1943','1963','1971','1976'];
+const ALL   = [...YEARS, '2006'];
+const COLORS = ['#FFE566','#FFE566','#FFE566','#FFE566','#FFE566','#FFE566','#FFE566','#FFE566'];
+const LU_COLORS = {
+  residential:'#FFFF82',   commercial:'#FF4040',
+  industry:'#9B59B6',      institutional:'#4A90D9',
+  waterbodies:'#A8D8EA',   expanded:'#C8E6A0',
+  Unknown:'#333333',
+};
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+  center: [80.27, 13.05],
+  zoom: 10,
+  interactive: false,
+  attributionControl: false,
+});
+
+map.on('load', async () => {
+  map.resize();
+  map.fitBounds([[79.95,12.75],[80.50,13.35]], { animate:false, padding:40 });
+
+  // Keep only water fills and water labels from the basemap
+  const KEEP = new Set([
+    'background','water','water_shadow','waterway',
+    'waterway_label','watername_ocean','watername_sea',
+    'watername_lake','watername_lake_line',
+  ]);
+  map.getStyle().layers.forEach(layer => {
+    if (!KEEP.has(layer.id)) map.setLayoutProperty(layer.id, 'visibility', 'none');
+  });
+  ['waterway_label','watername_lake','watername_lake_line','watername_sea'].forEach(id => {
+    map.setPaintProperty(id, 'text-color', 'rgba(255,255,255,0.7)');
+    map.setPaintProperty(id, 'text-halo-color', 'rgba(0,0,0,0.6)');
+    map.setPaintProperty(id, 'text-halo-width', 1.5);
+  });
+  map.setPaintProperty('water', 'fill-color', '#000066');
+
+  // Load year layers — inline data to avoid fetch errors
+  for (let i = 0; i < YEARS.length; i++) {
+    try {
+      const resp = await fetch(`data/${YEARS[i]}_net.geojson`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+      map.addSource(`src-${YEARS[i]}`, { type:'geojson', data });
+      map.addLayer({
+        id:`lyr-${YEARS[i]}`, type:'fill', source:`src-${YEARS[i]}`,
+        layout:{ visibility:'none' },
+        paint:{ 'fill-color':COLORS[i], 'fill-opacity':0.5, 'fill-antialias':false },
+      });
+    } catch(e) { console.error('Year layer failed:', YEARS[i], e); }
+  }
+
+  // Land use 1976
+  const LU_COLORS_1976 = {
+    residential:'#FFFF82', mix_residential:'#FFD700', commercial:'#FF4040',
+    industrial:'#9B59B6',  institutional:'#4A90D9',   open_space:'#7DC67E',
+    agricultural:'#C8E6A0', waterbody:'#A8D8EA',      Desconocido:'#333333',
+  };
+  try {
+    const lu1976 = await (await fetch('data/landuse_1976.geojson')).json();
+    map.addSource('src-lu-1976', { type:'geojson', data:lu1976 });
+    map.addLayer({
+      id:'lyr-lu-1976', type:'fill', source:'src-lu-1976',
+      layout:{ visibility:'none' },
+      paint:{
+        'fill-color':['match',['get','type_use'],...Object.entries(LU_COLORS_1976).flat(),'#333'],
+        'fill-opacity':0.85, 'fill-antialias':false,
+      },
+    });
+  } catch(e) { console.error('Landuse 1976 failed:', e); }
+
+  // Land use 2006
+  try {
+    const luData = await (await fetch('data/landuse_2006.geojson')).json();
+    map.addSource('src-2006', { type:'geojson', data:luData });
+    map.addLayer({
+      id:'lyr-2006', type:'fill', source:'src-2006',
+      layout:{ visibility:'none' },
+      paint:{
+        'fill-color':['match',['get','use'],...Object.entries(LU_COLORS).flat(),'#333'],
+        'fill-opacity':0.85, 'fill-antialias':false,
+      },
+    });
+  } catch(e) { console.error('Landuse 2006 failed:', e); }
+
+  // Rivers — fill polygons from shapefile
+  try {
+    const rivData = await (await fetch('data/chennai_rivers.geojson')).json();
+    map.addSource('src-rivers', { type:'geojson', data:rivData });
+    map.addLayer({ id:'lyr-rivers', type:'fill', source:'src-rivers',
+      paint:{ 'fill-color':'#0000FF', 'fill-opacity':1 }
+    });
+    map.addLayer({ id:'lyr-rivers-outline', type:'line', source:'src-rivers',
+      paint:{ 'line-color':'rgba(255,255,255,0.3)', 'line-width':0.5 }
+    });
+  } catch(e) { console.error('Rivers failed:', e); }
+
+  // River name labels
+  try {
+    const rivLabels = await (await fetch('data/rivers_chennai.geojson')).json();
+    map.addSource('src-river-labels', { type:'geojson', data:rivLabels });
+    map.addLayer({ id:'lyr-river-labels', type:'symbol', source:'src-river-labels',
+      layout:{
+        'text-field': ['get','rivname'],
+        'text-size': 11,
+        'text-font': ['Open Sans Italic','Noto Sans Regular'],
+        'text-anchor': 'center',
+        'text-allow-overlap': true,
+      },
+      paint:{
+        'text-color': 'rgba(255,255,255,0.85)',
+        'text-halo-color': 'rgba(0,0,0,0.7)',
+        'text-halo-width': 1.5,
+      },
+    });
+  } catch(e) { console.error('River labels failed:', e); }
+
+  function showYear(idx) {
+    // Hide all layers
+    YEARS.forEach(y => {
+      if (map.getLayer(`lyr-${y}`)) map.setLayoutProperty(`lyr-${y}`, 'visibility', 'none');
+    });
+    if (map.getLayer('lyr-lu-1976')) map.setLayoutProperty('lyr-lu-1976', 'visibility', 'none');
+    if (map.getLayer('lyr-2006'))    map.setLayoutProperty('lyr-2006',    'visibility', 'none');
+
+    if (idx === 7) {
+      // 1976 — show land use
+      if (map.getLayer('lyr-lu-1976')) map.setLayoutProperty('lyr-lu-1976', 'visibility', 'visible');
+    } else if (idx === 8) {
+      // 2006 — show land use
+      if (map.getLayer('lyr-2006')) map.setLayoutProperty('lyr-2006', 'visibility', 'visible');
+    } else {
+      // 1633–1971 — show orange urban extent
+      if (map.getLayer(`lyr-${YEARS[idx]}`)) map.setLayoutProperty(`lyr-${YEARS[idx]}`, 'visibility', 'visible');
+    }
+
+    document.getElementById('year-label').textContent = ALL[idx];
+    document.getElementById('lu-legend').style.display = idx >= 7 ? 'flex' : 'none';
+    document.getElementById('lu-legend-title').textContent = idx === 7 ? 'Land use 1976' : 'Land use 2006';
+    document.getElementById('lu-legend-items-1976').style.display = idx === 7 ? 'flex' : 'none';
+    document.getElementById('lu-legend-items-2006').style.display = idx === 8 ? 'flex' : 'none';
+    document.querySelectorAll('.tick').forEach(el =>
+      el.classList.toggle('active', Number(el.dataset.idx) === idx)
+    );
+  }
+
+  const slider = document.getElementById('slider');
+  slider.addEventListener('input', () => showYear(Number(slider.value)));
+  document.querySelectorAll('.tick').forEach(el => {
+    el.addEventListener('click', () => {
+      slider.value = el.dataset.idx;
+      showYear(Number(el.dataset.idx));
+    });
+  });
+
+  showYear(0);
+});
+</script>
+</body>
+</html>

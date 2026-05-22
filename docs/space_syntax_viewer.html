@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Syntax — Chennai</title>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    .maplibregl-ctrl-attrib,.maplibregl-ctrl-logo { display:none !important; }
+    .maplibregl-ctrl-zoom-in,.maplibregl-ctrl-zoom-out,.maplibregl-ctrl-compass { width:20px !important; height:20px !important; }
+    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon,.maplibregl-ctrl-compass .maplibregl-ctrl-icon { background-size:12px !important; }
+    .maplibregl-ctrl-scale { font-size:8px !important; height:10px !important; line-height:9px !important; padding:0 4px !important; border-width:1px !important; }
+    html, body { height:100%; overflow:hidden; background:#050505; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:#fff; }
+    #map { position:absolute; top:0; left:0; width:64%; height:100%; }
+
+    #instructions {
+      position:absolute; top:12px; left:12px; z-index:10;
+      background:rgba(0,0,0,0.7); 
+      padding:8px 14px; max-width:420px;
+    }
+    #instr-toggle {
+      font-size:9px; color:#fff; letter-spacing:.06em;
+      text-transform:uppercase; cursor:pointer;
+    }
+    #instr-toggle:hover { color:#aaa; }
+    #instr-body { margin-top:8px; display:flex; flex-direction:column; gap:5px; }
+    .instr-row { display:flex; gap:10px; font-size:9px; line-height:1.5; }
+    .instr-key { color:#fff; font-weight:700; text-transform:uppercase; letter-spacing:.06em; width:80px; flex-shrink:0; }
+    .instr-val { color:#555; }
+    #panel {
+      position:absolute; top:120px; left:12px; z-index:9;
+      background:rgba(0,0,0,0.35); backdrop-filter:blur(8px); border-radius:6px;
+      padding:8px 12px; font-size:9px;
+      display:flex; flex-direction:column; align-items:flex-start; gap:8px;
+      white-space:nowrap;
+    }
+    #panel h2 { font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#fff; margin-bottom:8px; }
+    .section-lbl { font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:#fff; margin-bottom:0; margin-right:4px; }
+
+    .row { display:flex; gap:5px; margin-bottom:0; }
+    .btn {
+      flex:1; padding:5px 0; background:transparent; border:none;
+      border-radius:0; color:#fff; font-size:8px; font-weight:400;
+      text-transform:uppercase; letter-spacing:.04em; cursor:pointer; text-align:center;
+      transition: color 120ms, border-color 120ms;
+    }
+    .btn { opacity:0.4; transition:opacity 120ms, color 120ms, border-color 120ms; }
+    .btn:hover { color:#fff; opacity:0.75; }
+    .btn.active { background:transparent; border-bottom:1px solid #fff; color:#fff; opacity:1; }
+    .btn.flood-active { color:#93c5fd; border-bottom:1px solid #3b82f6; }
+
+    .divider { display:none; }
+
+    .bar { height:7px; border-radius:2px; margin-bottom:3px; }
+    .labels { display:flex; justify-content:space-between; color:#fff; font-size:9px; }
+    .flood-legend { margin-top:8px; }
+    .flood-legend h3 { font-size:9px; color:#fff; margin-bottom:5px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; }
+    .flood-item { display:flex; align-items:center; gap:6px; margin-bottom:3px; font-size:9px; color:#fff; }
+    .flood-swatch { width:12px; height:12px; border-radius:2px; flex-shrink:0; }
+
+    #sidebar {
+      position:absolute; top:0; right:0; width:36%; height:100%;
+      background:#000; border-left:1px solid #1a1a1a;
+      display:flex; flex-direction:column; padding:32px 40px 32px 32px;
+      box-sizing:border-box; overflow:hidden;
+    }
+    .sidebar-title {
+      font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+      color:#fff; margin-bottom:32px;
+    }
+    .chart-wrap { flex:1; display:flex; flex-direction:column; justify-content:center; gap:20px; }
+    .metric-row-chart { display:flex; flex-direction:column; gap:5px; }
+    .metric-name { font-size:8.5px; text-transform:uppercase; letter-spacing:.08em; color:#fff; margin-bottom:2px; }
+    .bar-group { display:flex; flex-direction:column; gap:3px; }
+    .bar-item { display:flex; align-items:center; gap:8px; }
+    .bar-label { font-size:9px; color:#fff; width:44px; flex-shrink:0; text-align:right; }
+    .bar-track { flex:1; height:6px; background:transparent; border-bottom:1px solid #222; border-radius:0; overflow:visible; position:relative; display:flex; align-items:center; }
+    .bar-fill { position:absolute; top:50%; left:0; height:4px; transform:translateY(-50%); border-radius:0; transition:width 600ms ease; }
+    .bar-fill.normal { background:rgba(255,255,255,0.2); }
+    .bar-fill.flood  { background:#0000FF; }
+    .bar-val { position:relative; z-index:1; font-size:8px; color:#fff; padding-left:5px; white-space:nowrap; }
+    .diff-label { font-size:8.5px; font-weight:700; margin-top:3px; letter-spacing:.02em; }
+
+    #loading {
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      background:rgba(0,0,0,.8); padding:10px 18px; border-radius:4px;
+      font-size:11px; color:#fff; display:none; z-index:20;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <div id="instructions">
+    <div id="instr-toggle" onclick="var b=document.getElementById('instr-body'),open=b.style.display==='none';b.style.display=open?'block':'none';this.textContent=open?'How to use ↑':'How to use ↓'">How to use ↓</div>
+    <div id="instr-body" style="display:none">
+      <div class="instr-row"><span class="instr-key">Zone</span><span class="instr-val">City 1–5 shows each fragment individually · Citywide shows the full network</span></div>
+      <div class="instr-row"><span class="instr-key">Radius</span><span class="instr-val">Pedestrian (r800) local scale · Urban (r3000) city scale</span></div>
+      <div class="instr-row"><span class="instr-key">Metric</span><span class="instr-val">Accessibility (NAIN) how reachable · Flow (NACH) how much movement</span></div>
+      <div class="instr-row"><span class="instr-key">100-yr flood</span><span class="instr-val">Overlay of flood inundation zones by severity</span></div>
+      <div class="instr-row"><span class="instr-key">Fragments</span><span class="instr-val">Toggle F1–F5 boundary lines</span></div>
+    </div>
+  </div>
+  <div id="sidebar">
+    <div class="sidebar-title">Space Syntax — Flood Impact</div>
+    <div class="chart-wrap" id="chart"></div>
+  </div>
+  <div id="panel">
+    <span class="section-lbl">Zone</span>
+    <div class="row">
+      <button class="btn" data-group="ciudad">City 1–5</button>
+      <button class="btn" data-group="citywide">Citywide</button>
+    </div>
+    <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">Each fragment individually or full network</small>
+    <hr class="divider">
+    <span class="section-lbl">Radius</span>
+    <div class="row">
+      <button class="btn active" data-radio="r800">Pedestrian</button>
+      <button class="btn" data-radio="r3000">Urban</button>
+    </div>
+    <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">r800 local scale · r3000 city scale</small>
+    <hr class="divider">
+    <span class="section-lbl">Metric</span>
+    <div class="row">
+      <button class="btn active" data-metric="NAIN">Accessibility</button>
+      <button class="btn" data-metric="NACH">Flow</button>
+    </div>
+    <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">NAIN how reachable · NACH how much movement</small>
+    <hr class="divider">
+    <button class="btn" id="floodBtn">100-yr flood</button>
+    <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">Overlay flood inundation zones by severity</small>
+    <button class="btn active" id="fragBtn" style="margin-top:6px;">Fragments F1–F5</button>
+    <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">Toggle disconnected area boundaries</small>
+    <div id="legend"></div>
+  </div>
+  <div id="loading">Loading…</div>
+
+  <script>
+    const RAMP = ["#0000FF","#00CCFF","#00FF00","#FFFF00","#FF0000"];
+
+    const STYLE = {
+      NAIN: { fields:{ r800:"NAINr800m", r3000:"NAINr3000m" } },
+      NACH: { fields:{ r800:"NACHr800m", r3000:"NACHr3000m" } },
+    };
+    const ZONE_GROUPS = {
+      ciudad:   ["city_01","city_02","city_03","city_04","city_05"],
+      citywide: ["citywide"],
+    };
+
+    const state = { metric:"NAIN", radio:"r800", active:new Set(), cache:{}, floodOn:false };
+
+    const map = new maplibregl.Map({
+      container:"map", style:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      center:[80.2707,13.0827], zoom:9.5, pitch:0, antialias:true,
+    });
+    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+    map.addControl(new maplibregl.ScaleControl({unit:"metric"}), "bottom-left");
+
+    const loadingEl = document.getElementById("loading");
+    const legendEl  = document.getElementById("legend");
+    const floodBtn  = document.getElementById("floodBtn");
+
+    function layerId(name)  { return `ss-layer-${name.replace(/\s+/g,"-")}`; }
+    function sourceId(name) { return `ss-src-${name.replace(/\s+/g,"-")}`; }
+
+    function percentile(sorted, p) {
+      const i = Math.round(p * (sorted.length - 1));
+      return sorted[Math.max(0, Math.min(sorted.length-1, i))];
+    }
+
+    function computeDomain(rk) {
+      const field = STYLE[state.metric].fields[rk];
+      const values = [];
+      for (const name of state.active) {
+        if (!name.includes(rk)) continue;
+        const fc = state.cache[name];
+        if (!fc) continue;
+        for (const f of fc.features) {
+          const v = f.properties?.[field];
+          const n = typeof v === "number" ? v : Number(v);
+          if (Number.isFinite(n)) values.push(n);
+        }
+      }
+      if (values.length < 5) return [0, 0.25, 0.5, 0.75, 1];
+      values.sort((a,b) => a-b);
+      return [0.05,0.25,0.50,0.75,0.95].map(p => percentile(values, p));
+    }
+
+    function colorExpr(name) {
+      const rk = name.includes("r800") ? "r800" : "r3000";
+      const field = STYLE[state.metric].fields[rk];
+      const domain = computeDomain(rk);
+      const expr = ["interpolate",["linear"],["to-number",["coalesce",["get",field],domain[0]]]];
+      domain.forEach((v,i) => expr.push(v, RAMP[i]));
+      return expr;
+    }
+
+    async function loadLayer(name) {
+      if (!state.cache[name]) {
+        loadingEl.style.display = "block";
+        try {
+          const res = await fetch(`./data/space_syntax_${name.replace(" ","_")}.geojson`);
+          state.cache[name] = await res.json();
+        } finally { loadingEl.style.display = "none"; }
+      }
+      if (!map.getSource(sourceId(name))) {
+        map.addSource(sourceId(name), { type:"geojson", data:state.cache[name] });
+      }
+      if (!map.getLayer(layerId(name))) {
+        map.addLayer({ id:layerId(name), type:"line", source:sourceId(name),
+          paint:{ "line-color":colorExpr(name), "line-width":1.2, "line-opacity":0.9 }
+        });
+      }
+    }
+
+    function removeLayer(name) {
+      if (map.getLayer(layerId(name)))  map.removeLayer(layerId(name));
+      if (map.getSource(sourceId(name))) map.removeSource(sourceId(name));
+    }
+
+    function updateColors() {
+      for (const name of state.active) {
+        if (map.getLayer(layerId(name))) {
+          map.setPaintProperty(layerId(name), "line-color", colorExpr(name));
+        }
+      }
+    }
+
+    function renderLegend() {
+      const radioLabel = state.radio === "r800" ? "Pedestrian scale" : "Urban scale";
+      const bar = `linear-gradient(to right,#0000FF,#00CCFF,#00FF00,#FFFF00,#FF0000)`;
+      let html = `
+        <h3 style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">${state.metric} · ${radioLabel}</h3>
+        <div class="bar" style="background:${bar}"></div>
+        <div class="labels"><span>Low</span><span>High</span></div>`;
+      if (state.floodOn) {
+        html += `<div class="flood-legend"><h3>Flood 100-yr</h3>`;
+        [["LOW","#ffffff",0.25],["MODERATE","#6666ff",0.45],["HIGH","#0000FF",0.65]].forEach(([label,color,op]) => {
+          html += `<div class="flood-item"><div class="flood-swatch" style="background:${color};opacity:${op}"></div>${label}</div>`;
+        });
+        html += `</div>`;
+      }
+      legendEl.innerHTML = html;
+    }
+
+    document.querySelectorAll("[data-group]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const group = btn.dataset.group;
+        if (btn.classList.contains("active")) return;
+        for (const n of [...state.active]) { removeLayer(n); state.active.delete(n); }
+        document.querySelectorAll("[data-group]").forEach(b => b.classList.remove("active"));
+        const names = ZONE_GROUPS[group].map(z => `${z} ${state.radio}`);
+        await Promise.all(names.map(n => loadLayer(n).then(() => state.active.add(n))));
+        btn.classList.add("active");
+        updateColors(); renderLegend();
+      });
+    });
+
+    document.querySelectorAll("[data-radio]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const newRadio = btn.dataset.radio;
+        if (newRadio === state.radio) return;
+        const oldNames = [...state.active];
+        oldNames.forEach(n => removeLayer(n));
+        state.active.clear();
+        state.radio = newRadio;
+        document.querySelectorAll("[data-radio]").forEach(b => b.classList.toggle("active", b.dataset.radio === newRadio));
+        const activeGroups = [...document.querySelectorAll("[data-group].active")].map(b => b.dataset.group);
+        for (const group of activeGroups) {
+          const names = ZONE_GROUPS[group].map(z => `${z} ${newRadio}`);
+          await Promise.all(names.map(n => loadLayer(n).then(() => state.active.add(n))));
+        }
+        renderLegend();
+      });
+    });
+
+    document.querySelectorAll("[data-metric]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.metric = btn.dataset.metric;
+        document.querySelectorAll("[data-metric]").forEach(b => b.classList.toggle("active", b.dataset.metric === state.metric));
+        updateColors(); renderLegend();
+      });
+    });
+
+    // ── Fragments toggle ──
+    const fragBtn = document.getElementById("fragBtn");
+    let fragVisible = true;
+    fragBtn.addEventListener("click", () => {
+      fragVisible = !fragVisible;
+      const vis = fragVisible ? "visible" : "none";
+      ["fragments-glow","fragments-line","fragments-label","fragments-pts"].forEach(id => {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", vis);
+      });
+      fragBtn.classList.toggle("active", fragVisible);
+    });
+
+    let floodLoaded = false;
+    floodBtn.addEventListener("click", async () => {
+      if (!state.floodOn) {
+        if (!floodLoaded) {
+          loadingEl.style.display = "block";
+          try {
+            const res = await fetch("./data/chennai_flood_indundation_zones.geojson");
+            const data = await res.json();
+            map.addSource("flood-src", { type:"geojson", data });
+            const colorMatch = ["match",["get","CATEGORY"],
+              "LOW",     "#ffffff",
+              "MODERATE","#6666ff",
+              "HIGH",    "#0000FF",
+              "#ffffff"
+            ];
+            const opacityMatch = ["match",["get","CATEGORY"],
+              "LOW",     0.25,
+              "MODERATE",0.45,
+              "HIGH",    0.65,
+              0.3
+            ];
+            // Insert below fragments layers
+            const belowLayer = map.getLayer("fragments-glow") ? "fragments-glow" : undefined;
+            map.addLayer({ id:"flood-fill", type:"fill", source:"flood-src",
+              paint:{ "fill-color":colorMatch, "fill-opacity":opacityMatch, "fill-antialias":false }
+            }, belowLayer);
+            floodLoaded = true;
+          } finally { loadingEl.style.display = "none"; }
+        } else {
+          map.setLayoutProperty("flood-fill","visibility","visible");
+        }
+        state.floodOn = true;
+        floodBtn.classList.add("flood-active");
+      } else {
+        map.setLayoutProperty("flood-fill","visibility","none");
+        state.floodOn = false;
+        floodBtn.classList.remove("flood-active");
+      }
+      renderLegend();
+    });
+
+    const METRICS = [
+      { label:"Segments",                 tech:"Street segments",  normal:252628, flood:236046, isCount:true },
+      { label:"City accessibility",       tech:"NAIN r3000",       normal:0.8217, flood:0.6595 },
+      { label:"City flow",                tech:"NACH r3000",       normal:0.8110, flood:0.6642 },
+      { label:"Pedestrian accessibility", tech:"NAIN r800",        normal:0.9219, flood:0.7815 },
+      { label:"Pedestrian flow",          tech:"NACH r800",        normal:0.8458, flood:0.8192 },
+    ];
+
+    function buildChart() {
+      document.getElementById("chart").innerHTML = METRICS.map(m => {
+        const fPct = (m.flood / m.normal * 100).toFixed(1);
+        const diff = m.isCount
+          ? `−${(((m.normal-m.flood)/m.normal)*100).toFixed(2)}%`
+          : `${(((m.flood-m.normal)/m.normal)*100).toFixed(2)}%`;
+        const diffColor = m.flood < m.normal ? "#ef4444" : "#22c55e";
+        const nFmt = m.isCount ? m.normal.toLocaleString() : m.normal.toFixed(4);
+        const fFmt = m.isCount ? m.flood.toLocaleString()  : m.flood.toFixed(4);
+        return `
+          <div class="metric-row-chart">
+            <div class="metric-name">${m.label}</div>
+            <div style="font-size:8px;color:#fff;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">${m.tech}</div>
+            <div class="bar-group">
+              <div class="bar-item">
+                <span class="bar-label">Normal</span>
+                <div class="bar-track">
+                  <div class="bar-fill normal" style="width:100%"></div>
+                  <span class="bar-val">${nFmt}</span>
+                </div>
+              </div>
+              <div class="bar-item">
+                <span class="bar-label">Flood</span>
+                <div class="bar-track">
+                  <div class="bar-fill flood" style="width:${fPct}%"></div>
+                  <span class="bar-val">${fFmt}</span>
+                </div>
+              </div>
+            </div>
+            <div class="diff-label" style="color:${diffColor}">${diff}</div>
+          </div>`;
+      }).join("");
+    }
+
+    buildChart();
+
+    function collapseInstructions() {
+      const body = document.getElementById('instr-body');
+      if (body && body.style.display !== 'none') {
+        body.style.display = 'none';
+        document.getElementById('instr-toggle').textContent = 'How to use ↓';
+      }
+    }
+    map.once('click', collapseInstructions);
+    document.querySelectorAll('.btn[data-group], .btn[data-radio], .btn[data-metric], #floodBtn, #fragBtn').forEach(btn => {
+      btn.addEventListener('click', collapseInstructions, { once: true });
+    });
+
+    map.on("load", async () => {
+      map.setPaintProperty("water", "fill-color", "#000066");
+      map.fitBounds([[80.1396, 12.8519],[80.3320, 13.2330]], { padding:20, animate:false });
+
+      // Load street network first
+      // No auto-load — user activates layers manually
+
+      // Fragments on top — outline + glow + labels
+      const fragRes = await fetch("./data/fragments.geojson");
+      const fragData = await fragRes.json();
+      map.addSource("fragments", { type:"geojson", data:fragData });
+
+      // Glow (wide, blurred)
+      map.addLayer({ id:"fragments-glow", type:"line", source:"fragments",
+        paint:{ "line-color":"#ffffff", "line-width":8, "line-opacity":0.08, "line-blur":6 }
+      });
+      // White outline — no fill
+      map.addLayer({ id:"fragments-line", type:"line", source:"fragments",
+        paint:{ "line-color":"#ffffff", "line-width":1.2, "line-opacity":0.6, "line-dasharray":[4,3] }
+      });
+      // Fragment labels as HTML markers — always visible
+      const labRes = await fetch("./data/fragments_labels.geojson");
+      const labData = await labRes.json();
+      labData.features.forEach(feat => {
+        const [lon, lat] = feat.geometry.coordinates;
+        const num = feat.properties.num;
+        const el = document.createElement("div");
+        el.textContent = num;
+        el.style.cssText = `
+          font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+          font-size:52px; font-weight:900;
+          color:rgba(255,255,255,0.45);
+          pointer-events:auto;
+          line-height:1;
+          text-shadow: 0 0 20px rgba(255,255,255,0.15);
+          transform: translate(-50%,-50%);
+          cursor:default;
+          transition: color 200ms ease, text-shadow 200ms ease;
+        `;
+        el.addEventListener('mouseenter', () => {
+          el.style.color = 'rgba(255,255,255,1)';
+          el.style.textShadow = '0 0 30px rgba(255,255,255,0.6)';
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.color = 'rgba(255,255,255,0.45)';
+          el.style.textShadow = '0 0 20px rgba(255,255,255,0.15)';
+        });
+        new maplibregl.Marker({ element:el, anchor:"center" })
+          .setLngLat([lon, lat])
+          .addTo(map);
+      });
+
+      renderLegend();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+  <defs>
+    <style>
+      .stroke{fill:none;stroke:#ffffff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;}
+      .water{fill:#00CCFF;stroke:none;opacity:0.7;}
+    </style>
+  </defs>
+
+  <!-- water -->
+  <path class="water" d="M40 40 L40 96 L160 96 L160 40 Q150 44 140 40 Q130 36 120 40 Q110 44 100 40 Q90 36 80 40 Q70 44 60 40 Q50 36 40 40 Z"/>
+
+  <!-- tank outline (open top) -->
+  <path class="stroke" d="M40 20 V96 H160 V20"/>
+  <path class="stroke" d="M40 20 H85"/>
+  <path class="stroke" d="M115 20 H160"/>
+
+  <!-- cap -->
+  <path class="stroke" d="M92 14 H108"/>
+  <path class="stroke" d="M95 14 V8 H105 V14"/>
+</svg>

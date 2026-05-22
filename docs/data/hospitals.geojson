@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"name": "hospitals",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 80.276023596241728, 13.061644557993926 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 80.258589187989529, 13.008696944304281 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 80.266834213867298, 13.029485289172404 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 80.264226703311792, 13.053428886552965 ] } },
+{ "type": "Feature", "properties": { }, "geometry": { "type": "Point", "coordinates": [ 80.257140456747138, 13.037959012330646 ] } }
+]
+}

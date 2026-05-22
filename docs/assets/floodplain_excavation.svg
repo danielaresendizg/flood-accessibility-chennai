@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 140" width="320" height="140">
+  <defs>
+    <style>
+      .b{fill:none;stroke:#ffffff;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;}
+      .d{fill:none;stroke:#888888;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:10 10;}
+      .w{fill:#00CCFF;stroke:none;}
+      .ww{fill:none;stroke:#00CCFF;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;}
+    </style>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#ffffff"/>
+    </marker>
+  </defs>
+
+  <!-- water in left basin -->
+  <path class="w" d="M35 48 L55 98 L95 98 L110 72 L110 58
+                     C95 52 80 52 65 58
+                     C55 62 45 62 35 58 Z"/>
+  <path class="ww" d="M35 58 C45 52 55 52 65 58 C80 64 95 64 110 58"/>
+
+  <!-- ground / section line -->
+  <path class="b" d="M20 30 H45 L55 98 H95 L110 72 H175 L185 48 H205 L215 72 H300"/>
+
+  <!-- small structure / notch -->
+  <path class="b" d="M150 72 V52 H170 V72"/>
+
+  <!-- dashed intervention volumes -->
+  <path class="d" d="M118 78 H172 V110 H118 Z"/>
+  <path class="d" d="M250 50 H300 V80 H250 Z"/>
+
+  <!-- flow arrow -->
+  <path class="b" d="M200 26 H265" marker-end="url(#arrow2)"/>
+</svg>

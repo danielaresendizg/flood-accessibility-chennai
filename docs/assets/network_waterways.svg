@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <style>
+      .s{fill:none;stroke:#ffffff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;}
+      .sf{fill:#ffffff;stroke:none;}
+      .w{fill:none;stroke:#00CCFF;stroke-width:7;stroke-linecap:round;stroke-linejoin:round;}
+    </style>
+  </defs>
+
+  <!-- bridge deck (top horizontal beam) -->
+  <rect class="sf" x="28" y="58" width="144" height="12" rx="3"/>
+
+  <!-- battlements on top -->
+  <rect class="sf" x="28"  y="42" width="20" height="18" rx="2"/>
+  <rect class="sf" x="60"  y="42" width="20" height="18" rx="2"/>
+  <rect class="sf" x="92"  y="42" width="20" height="18" rx="2"/>
+  <rect class="sf" x="124" y="42" width="20" height="18" rx="2"/>
+  <rect class="sf" x="152" y="42" width="20" height="18" rx="2"/>
+
+  <!-- left pier -->
+  <rect class="sf" x="28" y="70" width="30" height="52" rx="2"/>
+  <!-- right pier -->
+  <rect class="sf" x="142" y="70" width="30" height="52" rx="2"/>
+
+  <!-- arch -->
+  <path class="s" stroke-width="10" d="M58 122 Q100 72 142 122" fill="none"/>
+
+  <!-- water waves -->
+  <path class="w" d="M25 142 C44 132 63 132 82 142 C101 152 120 152 139 142 C158 132 177 132 178 142"/>
+  <path class="w" d="M25 160 C44 150 63 150 82 160 C101 170 120 170 139 160 C158 150 177 150 178 160"/>
+  <path class="w" d="M25 178 C44 168 63 168 82 178 C101 188 120 188 139 178 C158 168 177 168 178 178"/>
+</svg>

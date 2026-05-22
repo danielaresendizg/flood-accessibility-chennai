@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stage 4 — Local Resilience</title>
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    .maplibregl-ctrl-attrib,.maplibregl-ctrl-logo { display:none !important; }
+    .maplibregl-ctrl-zoom-in,.maplibregl-ctrl-zoom-out,.maplibregl-ctrl-compass { width:20px !important; height:20px !important; }
+    .maplibregl-ctrl-zoom-in .maplibregl-ctrl-icon,.maplibregl-ctrl-zoom-out .maplibregl-ctrl-icon,.maplibregl-ctrl-compass .maplibregl-ctrl-icon { background-size:12px !important; }
+    .maplibregl-ctrl-scale { font-size:8px !important; height:10px !important; line-height:9px !important; padding:0 4px !important; border-width:1px !important; }
+    html, body { height:100%; overflow:hidden; background:#050505; font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:#fff; }
+    #map { position:absolute; top:0; left:0; width:50%; height:100%; }
+
+    #panel {
+      position:absolute; top:12px; left:12px; z-index:10;
+      background:rgba(0,0,0,0.35); backdrop-filter:blur(8px); border-radius:6px;
+      padding:8px 12px; display:flex; flex-direction:column; gap:8px; min-width:190px;
+    }
+    .tog { display:flex; align-items:center; gap:8px; cursor:pointer; padding:3px 0; border-radius:0; border:none; background:transparent; transition:color 120ms, opacity 120ms; opacity:0.4; }
+    .tog .dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .tog-text { display:flex; flex-direction:column; gap:1px; }
+    .tog span { font-size:8px; font-weight:400; text-transform:uppercase; letter-spacing:.04em; color:#fff; }
+    .tog small { font-size:7px; color:#aaa; font-weight:400; text-transform:none; letter-spacing:0; line-height:1.3; }
+    .tog.active { opacity:1; }
+    .tog.active span { color:#fff; }
+    .tog:hover { opacity:0.75; }
+    .tog.active small { color:#aaa; }
+
+
+    #loading { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,.8); padding:10px 18px; border-radius:4px; font-size:11px; color:#fff; display:none; z-index:20; }
+    #tooltip { position:fixed; display:none; background:#111; border:1px solid #333; padding:6px 10px; border-radius:4px; font-size:10px; color:#fff; pointer-events:none; z-index:200; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <div id="panel">
+    <div class="tog active" data-layer="cluster">
+      <div class="dot" style="background:rgba(239,68,68,0.6);border:1px solid #ef4444;"></div>
+      <div class="tog-text">
+        <span>Safe zones</span>
+        <small>Clusters 7 and 9 — flood-free, high accessibility</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="shelter-safe">
+      <svg viewBox="0 0 32 32" width="12" height="12" style="flex-shrink:0"><circle cx="16" cy="16" r="15" fill="#fff" stroke="#000" stroke-width="1.5"/><polygon points="16,7 26,15 23,15 23,25 9,25 9,15 6,15" fill="#000"/><rect x="13" y="19" width="6" height="6" fill="#fff"/></svg>
+      <div class="tog-text">
+        <span>Shelters 0–10m</span>
+        <small>Within optimal proximity to safe zone</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="shelter-eval">
+      <svg viewBox="0 0 32 32" width="12" height="12" style="flex-shrink:0"><circle cx="16" cy="16" r="15" fill="#888" stroke="#fff" stroke-width="1.5"/><polygon points="16,7 26,15 23,15 23,25 9,25 9,15 6,15" fill="#fff"/><rect x="13" y="19" width="6" height="6" fill="#888"/></svg>
+      <div class="tog-text">
+        <span>Shelters 10–400m</span>
+        <small>Reachable but require evaluation</small>
+      </div>
+    </div>
+    <div class="tog active" data-layer="shelter-out">
+      <svg viewBox="0 0 32 32" width="12" height="12" style="flex-shrink:0;opacity:0.5"><circle cx="16" cy="16" r="15" fill="#000" stroke="#fff" stroke-width="1.5"/><polygon points="16,7 26,15 23,15 23,25 9,25 9,15 6,15" fill="#fff"/><rect x="13" y="19" width="6" height="6" fill="#000"/></svg>
+      <div class="tog-text">
+        <span>Shelters &gt;400m</span>
+        <small>Beyond reach during flood — 48.6% of total</small>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="loading">Loading…</div>
+  <div id="tooltip"></div>
+
+  <!-- Right panel -->
+  <style>
+    #info { position:absolute; top:0; right:0; width:50%; height:100%; background:#000; border-left:1px solid #1a1a1a; display:flex; flex-direction:column; justify-content:space-between; padding:48px 48px; overflow:hidden; gap:0; }
+    .stage-label { font-size:10px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#0000FF; margin-bottom:6px; }
+    .info-title { font-size:clamp(1rem,1.8vw,1.5rem); font-weight:900; color:#fff; line-height:1.2; margin-bottom:12px; }
+    .info-text { font-size:11px; color:#fff; line-height:1.7; max-width:420px; margin-bottom:20px; }
+    .strat-label { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#fff; margin-bottom:10px; }
+    .method-note { font-size:8px; color:#555; line-height:1.6; margin-top:14px; max-width:420px; }
+    .method-note strong { color:#777; }
+  </style>
+  <div id="info">
+    <div class="info-title">Shelter evaluation</div>
+    <p class="info-text">Chennai does not break evenly. When the network fractures, some areas hold. Within the flood-free zones, blocks were evaluated by population density, local accessibility (NAINr800) and urban-scale accessibility (NAINr3000). Two <strong style="color:#ef4444;">safe zones</strong> stand out.<br><br>Cluster 7 is small, only 90 blocks, but spatially tight and highly connected. A place where resources can be concentrated and people can actually reach them.<br><br>Cluster 9 is the opposite: 50,424 blocks spread across all five urban fragments, a distributed backbone that keeps resilience within reach for a wider population.<br><br>Together they are complementary. But the shelters do not follow this logic. 48.6% of Chennai's emergency shelters sit more than 400 metres from any accessible safe zone, beyond reach when it matters most.</p>
+    <div class="strat-label">Shelters — distance to accessible safe zone</div>
+    <div id="lollipop"></div>
+    <p class="method-note"><strong>Method</strong> — K-means clustering, 10 clusters. Cluster 7: density 0.493, NAINr800 0.615, NAINr3000 0.602. Cluster 9: density 0.439, NAINr800 0.411, NAINr3000 0.333.</p>
+  </div>
+
+  <script>
+    const map = new maplibregl.Map({
+      container:"map", style:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
+      center:[80.2707,13.0827], zoom:9.5, pitch:0, antialias:true
+    });
+    map.addControl(new maplibregl.NavigationControl(), "bottom-right");
+    map.addControl(new maplibregl.ScaleControl({unit:"metric"}), "bottom-left");
+
+    const loadingEl = document.getElementById("loading");
+    const tooltip   = document.getElementById("tooltip");
+    const state = { visible: new Set(["cluster","shelter-safe","shelter-out","shelter-eval"]) };
+
+    // Distance range 0–392m → radius 4–20px
+    const DIST_MIN = 0, DIST_MAX = 392;
+    const R_MIN = 4, R_MAX = 20;
+
+    async function load(id, url, addFn) {
+      loadingEl.style.display = "block";
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (!map.getSource(id)) map.addSource(id, { type:"geojson", data });
+        addFn(id);
+      } catch(e) { console.warn(id, e); }
+      finally { loadingEl.style.display = "none"; }
+    }
+
+    function addCluster(id) {
+      map.addLayer({ id:`${id}-fill`, type:"fill", source:id,
+        paint:{ "fill-color":"#ef4444", "fill-opacity":0.3, "fill-antialias":false }
+      });
+      map.addLayer({ id:`${id}-line`, type:"line", source:id,
+        paint:{ "line-color":"#ef4444", "line-width":1, "line-opacity":0.7 }
+      });
+    }
+
+    // SVG shelter icon: house shape with white icon on given bg
+    function shelterSVG(bg, iconColor, opacity=1) {
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" opacity="${opacity}">
+        <circle cx="16" cy="16" r="15" fill="${bg}" stroke="${iconColor}" stroke-width="1.5"/>
+        <polygon points="16,7 26,15 23,15 23,25 9,25 9,15 6,15" fill="${iconColor}"/>
+        <rect x="13" y="19" width="6" height="6" fill="${bg}"/>
+      </svg>`;
+    }
+
+    function svgToImg(svg, size=32) {
+      return new Promise(resolve => {
+        const blob = new Blob([svg], {type:"image/svg+xml"});
+        const url  = URL.createObjectURL(blob);
+        const img  = new Image(size, size);
+        img.onload = () => { resolve(img); URL.revokeObjectURL(url); };
+        img.src = url;
+      });
+    }
+
+    // glow layer (circle behind icon)
+    function addGlow(id) {
+      map.addLayer({ id:`${id}-glow`, type:"circle", source:id,
+        paint:{
+          "circle-color": "#ffffff",
+          "circle-radius": 18,
+          "circle-opacity": 0,
+          "circle-blur": 0.6,
+        }
+      });
+    }
+
+    function addHover(id) {
+      map.on("mouseenter", id, e => {
+        map.getCanvas().style.cursor = "pointer";
+        map.setPaintProperty(`${id}-glow`, "circle-opacity", 0.2);
+        const d = e.features[0].properties.distance;
+        tooltip.style.display = "block";
+        tooltip.innerHTML = d != null
+          ? `Distance to safe zone: <strong>${Math.round(d)} m</strong>`
+          : `<strong>Outside safe zone</strong>`;
+      });
+      map.on("mousemove", id, e => {
+        tooltip.style.left = (e.originalEvent.clientX + 14) + "px";
+        tooltip.style.top  = (e.originalEvent.clientY - 10) + "px";
+      });
+      map.on("mouseleave", id, () => {
+        map.getCanvas().style.cursor = "";
+        tooltip.style.display = "none";
+        map.setPaintProperty(`${id}-glow`, "circle-opacity", 0);
+      });
+    }
+
+    function addShelterSafe(id) {
+      addGlow(id);
+      map.addLayer({ id, type:"symbol", source:id,
+        layout:{
+          "icon-image": "icon-shelter-safe",
+          "icon-size": 0.7,
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        }
+      });
+      addHover(id);
+    }
+
+    function addShelterOut(id) {
+      // glow layer using shelter-eval source, filtered to null distance
+      map.addLayer({ id:`${id}-glow`, type:"circle", source:"shelter-eval",
+        filter: ["==", ["typeof", ["get","distance"]], "null"],
+        paint:{
+          "circle-color": "#ffffff",
+          "circle-radius": 18,
+          "circle-opacity": 0,
+          "circle-blur": 0.6,
+        }
+      });
+      map.addLayer({ id, type:"symbol", source:"shelter-eval",
+        filter: ["==", ["typeof", ["get","distance"]], "null"],
+        layout:{
+          "icon-image": "icon-shelter-out",
+          "icon-size": 0.4,
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
+        paint:{ "icon-opacity": 0.85 }
+      });
+      addHover(id);
+    }
+
+    function addShelterEval(id) {
+      addGlow(id);
+      const evalFilter = ["all", ["!=",["typeof",["get","distance"]],"null"], [">",["get","distance"], 10]];
+      map.setFilter(`${id}-glow`, evalFilter);
+      if (map.getLayer("shelter-out-glow")) map.setFilter("shelter-out-glow", ["!", ["has","distance"]]);
+      map.addLayer({ id, type:"symbol", source:id,
+        filter: evalFilter,
+        layout:{
+          "icon-image": "icon-shelter-eval",
+          "icon-size": ["interpolate",["linear"],["get","distance"],
+            DIST_MIN, 0.7,
+            DIST_MAX, 0.4
+          ],
+          "icon-allow-overlap": true,
+          "icon-ignore-placement": true,
+        },
+        paint:{ "icon-opacity": 0.85 }
+      });
+      addHover(id);
+    }
+
+    // Toggle
+    document.querySelectorAll("[data-layer]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.layer;
+        const vis = state.visible.has(id) ? "none" : "visible";
+        [`${id}`,`${id}-fill`,`${id}-line`,`${id}-glow`].forEach(lid => {
+          if (map.getLayer(lid)) map.setLayoutProperty(lid, "visibility", vis);
+        });
+        if (vis === "visible") { state.visible.add(id); btn.classList.add("active"); }
+        else { state.visible.delete(id); btn.classList.remove("active"); }
+      });
+    });
+
+    map.on("load", async () => {
+      map.setPaintProperty("water", "fill-color", "#000066");
+      // Load shelter icons
+      const iconSafe = await svgToImg(shelterSVG("#ffffff", "#000000"), 32);
+      const iconEval = await svgToImg(shelterSVG("#888888", "#ffffff"), 32);
+      const iconOut  = await svgToImg(shelterSVG("#000000", "#ffffff"), 32);
+      map.addImage("icon-shelter-safe", iconSafe);
+      map.addImage("icon-shelter-eval", iconEval);
+      map.addImage("icon-shelter-out",  iconOut);
+
+      await load("cluster",      "./data/buffer_cluster_9_slim.geojson", addCluster);
+      await load("shelter-eval", "./data/shelter_evaluation.geojson",    id => {
+        addShelterEval(id);
+        addShelterOut("shelter-out");
+      });
+      await load("shelter-safe", "./data/shelter_0_10M_safe.geojson",    addShelterSafe);
+      drawLollipop();
+    });
+
+    function drawLollipop() {
+      // colors match the map layers:
+      // 0-10m  → white (shelter_0_10M_safe)
+      // 10-50m, 50-100m, 100-400m → orange gradient (shelter_evaluation)
+      // >400m  → red (shelter_outside)
+      const SHELTER_SVG = {
+        safe: `<svg viewBox="0 0 32 32" width="14" height="14"><circle cx="16" cy="16" r="15" fill="#fff" stroke="#000" stroke-width="1.5"/><polygon points="16,7 26,15 23,15 23,25 9,25 9,15 6,15" fill="#000"/><rect x="13" y="19" width="6" height="6" fill="#fff"/></svg>`,
+        eval: `<svg viewBox="0 0 32 32" width="14" height="14"><circle cx="16" cy="16" r="15" fill="#888" stroke="#fff" stroke-width="1.5"/><polygon points="16,7 26,15 23,15 23,25 9,25 9,15 6,15" fill="#fff"/><rect x="13" y="19" width="6" height="6" fill="#888"/></svg>`,
+        out:  `<svg viewBox="0 0 32 32" width="14" height="14" style="opacity:0.6"><circle cx="16" cy="16" r="15" fill="#000" stroke="#fff" stroke-width="1.5"/><polygon points="16,7 26,15 23,15 23,25 9,25 9,15 6,15" fill="#fff"/><rect x="13" y="19" width="6" height="6" fill="#000"/></svg>`,
+      };
+      const BINS = [
+        { label: "0–10 m",    n: 26, pct: "14.2%", color: "#ffffff", barColor: "#ffffff", icon: "safe", dMin: 0,   dMax: 10,      layer: "shelter-safe" },
+        { label: "10–50 m",   n: 8,  pct: "4.4%",  color: "#888888", barColor: "#888888", icon: "eval", dMin: 10,  dMax: 50,      layer: "shelter-eval" },
+        { label: "50–100 m",  n: 14, pct: "7.6%",  color: "#888888", barColor: "#888888", icon: "eval", dMin: 50,  dMax: 100,     layer: "shelter-eval" },
+        { label: "100–400 m", n: 41, pct: "22.4%", color: "#888888", barColor: "#888888", icon: "eval", dMin: 100, dMax: 400,     layer: "shelter-eval" },
+        { label: "> 400 m",   n: 89, pct: "48.6%", color: "#ffffff", barColor: "#444",    icon: "out",  dMin: 400, dMax: Infinity, layer: "shelter-out"  },
+      ];
+      const MAX_N = 89;
+      const el = document.getElementById("lollipop");
+      if (!el) return;
+
+      el.innerHTML = BINS.map(b => {
+        const barPct = (b.n / MAX_N * 100).toFixed(1);
+        return `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="font-size:9px;color:#fff;width:68px;flex-shrink:0;text-align:right;">${b.label}</span>
+          <div style="flex:1;position:relative;height:2px;background:#222;border-radius:1px;">
+            <div style="position:absolute;top:0;left:0;height:2px;width:${barPct}%;background:${b.barColor};border-radius:1px;"></div>
+            <div class="lollipop-dot" data-color="${b.color}" data-dmin="${b.dMin}" data-dmax="${b.dMax === Infinity ? 99999 : b.dMax}" data-layer="${b.layer}" style="position:absolute;top:50%;left:${barPct}%;transform:translate(-50%,-50%);cursor:pointer;line-height:0;">${SHELTER_SVG[b.icon]}</div>
+          </div>
+          <span style="font-size:9px;color:#fff;width:52px;flex-shrink:0;">${b.n} <span style="color:#aaa;">${b.pct}</span></span>
+        </div>`;
+      }).join("");
+
+      // glow on hover — sync with map
+      el.querySelectorAll(".lollipop-dot").forEach(dot => {
+        const c    = dot.dataset.color;
+        const dMin = parseFloat(dot.dataset.dmin);
+        const dMax = parseFloat(dot.dataset.dmax) >= 99999 ? Infinity : parseFloat(dot.dataset.dmax);
+        const layer = dot.dataset.layer;
+
+        dot.addEventListener("mouseenter", () => {
+          dot.style.boxShadow = `0 0 8px 3px ${c}`;
+          dot.style.width = "13px"; dot.style.height = "13px";
+
+          // filter glow layer to only show matching distance range
+          if (layer === "shelter-out") {
+            map.setPaintProperty("shelter-out-glow", "circle-opacity", 0.2);
+          } else if (layer === "shelter-safe") {
+            map.setPaintProperty("shelter-safe-glow", "circle-opacity", 0.2);
+          } else {
+            const filter = ["all",
+              ["!=",["typeof",["get","distance"]],"null"],
+              [">=",["get","distance"], dMin],
+              ["<", ["get","distance"], dMax]
+            ];
+            map.setFilter("shelter-eval-glow", filter);
+            map.setPaintProperty("shelter-eval-glow", "circle-opacity", 0.2);
+          }
+        });
+
+        dot.addEventListener("mouseleave", () => {
+          dot.style.boxShadow = "none";
+          dot.style.width = "10px"; dot.style.height = "10px";
+          ["shelter-safe-glow","shelter-eval-glow","shelter-out-glow"].forEach(l => {
+            if (map.getLayer(l)) map.setPaintProperty(l, "circle-opacity", 0);
+          });
+          if (map.getLayer("shelter-eval-glow")) map.setFilter("shelter-eval-glow", null);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
