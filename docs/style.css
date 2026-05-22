@@ -627,3 +627,40 @@ section.visible{opacity:1;transform:translateY(0)}
   .stage-section,.transition-section{padding-bottom:var(--section-pad)}
   .end-cover,.hero{padding-bottom:0}
 }
+
+/* ── Rotate prompt (portrait mobile) ─────────────────────── */
+#rotate-prompt{
+  display:none;
+  position:fixed;inset:0;z-index:99999;
+  background:#000;
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:24px;
+  touch-action:none;
+}
+#rotate-prompt .rp-icon{
+  width:56px;height:56px;
+  animation:rp-spin 2s ease-in-out infinite;
+  opacity:.7;
+}
+@keyframes rp-spin{
+  0%  {transform:rotate(0deg)}
+  40% {transform:rotate(90deg)}
+  60% {transform:rotate(90deg)}
+  100%{transform:rotate(0deg)}
+}
+#rotate-prompt .rp-title{
+  font-family:"Inconsolata",monospace;
+  font-size:.85rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;
+  color:#fff;text-align:center;
+}
+#rotate-prompt .rp-sub{
+  font-family:"Inconsolata",monospace;
+  font-size:.62rem;letter-spacing:.06em;
+  color:rgba(255,255,255,.4);text-align:center;
+  text-transform:uppercase;
+}
+@media(max-width:900px) and (orientation:portrait){
+  #rotate-prompt{display:flex}
+}
