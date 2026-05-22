@@ -18,6 +18,15 @@
       <div class="rp-sub">This atlas is designed to be viewed in landscape mode for the best experience.</div>
     </div>
   </div>
+  <div id="inapp-prompt" aria-live="polite">
+    <div class="ip-card">
+      <div class="ip-icon">🌐</div>
+      <div class="ip-title">Open in your browser</div>
+      <div class="ip-sub">This atlas requires rotation and full browser features. Instagram's browser doesn't support this — open it in Safari or Chrome for the best experience.</div>
+      <button class="ip-btn" onclick="openInBrowser()">Open in browser →</button>
+      <button class="ip-skip" onclick="document.getElementById('inapp-prompt').style.display='none'">Continue anyway</button>
+    </div>
+  </div>
 
 
 <!-- Navigation -->
@@ -495,6 +504,27 @@
 
 <!-- App logic -->
 <script src="main.js"></script>
+
+
+  <script>
+    (function() {
+      var ua = navigator.userAgent || '';
+      var isInApp = /Instagram|FBAN|FBAV|FB_IAB|Twitter|TikTok|Line|Pinterest|Snapchat|WhatsApp/.test(ua);
+      if (isInApp) {
+        var el = document.getElementById('inapp-prompt');
+        if (el) el.style.display = 'flex';
+      }
+    })();
+
+    function openInBrowser() {
+      var url = window.location.href;
+      // iOS: try to open in Safari via intent
+      window.location.href = url.replace(/^https?:\/\//, 'googlechrome://') ;
+      setTimeout(function() {
+        window.location.href = url;
+      }, 500);
+    }
+  </script>
 
 </body>
 </html>
