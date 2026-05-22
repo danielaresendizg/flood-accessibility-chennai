@@ -14,7 +14,7 @@
   --card:#f5f5f5;
   --section-pad:clamp(30px,4.5vh,64px);
 }
-html{scroll-behavior:smooth;font-size:16px}
+html{scroll-behavior:smooth;font-size:16px;background:#000}
 body{
   font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
   background:var(--bg);
@@ -591,8 +591,8 @@ section.visible{opacity:1;transform:translateY(0)}
   .end-cover{padding-bottom:72px}
 }
 
-/* Landscape mobile (height ≤ 500px, wider than tall) */
-@media(max-height:500px) and (orientation:landscape){
+/* Landscape mobile/tablet (max-width 1024px, wider than tall) */
+@media(max-width:1024px) and (orientation:landscape){
   .nav{
     position:fixed;right:8px;top:50%;
     transform:translateY(-50%);
@@ -611,21 +611,36 @@ section.visible{opacity:1;transform:translateY(0)}
   .hero h1{font-size:clamp(14px,2.5vh,22px)}
   .hero-scroll{bottom:16px}
 
-  /* Viewers: full height, split layout preserved */
-  .viewer-section{height:100vh;padding:0}
-  .viewer-section iframe{width:100%;height:100%}
+  /* Viewers: full screen, no margins */
+  .viewer-section{
+    height:100vh;
+    height:100dvh;
+    width:100%;
+    padding:0;
+    margin:0;
+    background:#000;
+  }
+  .viewer-section iframe{
+    width:100%;
+    height:100%;
+    display:block;
+    border:none;
+  }
 
   /* Globe */
-  .globe-wrap{height:100vh}
+  .globe-wrap{height:100vh;height:100dvh}
   .globe-text-top,.globe-text-bottom{display:none}
 
   /* Methodology */
-  .methodology-section{height:100vh}
+  .methodology-section{height:100vh;height:100dvh}
   .methodology-svg-wrap svg{min-width:0;height:100%}
 
   /* Nav bar stays as sidebar — no bottom padding needed */
   .stage-section,.transition-section{padding-bottom:var(--section-pad)}
   .end-cover,.hero{padding-bottom:0}
+
+  /* Ensure body/html fill screen with no white gaps */
+  html,body{background:#000;margin:0;padding:0}
 }
 
 /* ── Orientation lock (portrait mobile/tablet) ────────────── */
