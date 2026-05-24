@@ -169,10 +169,10 @@
       #loading{position:fixed}
     }
     @media (max-height:500px) and (orientation:landscape) {
-      #map{width:46%;height:100%;position:absolute;left:10%}
-      #info{position:absolute;top:0;right:0;width:44%;height:100%;overflow-y:auto}
+      #map{width:52%;height:100%;position:absolute;left:0}
+      #info{position:absolute;top:0;right:0;width:48%;height:100%;overflow-y:auto}
       #panel{
-        position:absolute;bottom:8px;left:calc(10% + 6px);top:auto;
+        position:absolute;bottom:8px;left:8px;top:auto;
         background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);
         border-radius:6px;padding:5px 9px;
         max-width:180px;overflow:visible;
@@ -192,12 +192,9 @@
   </div>
 
   <script>
-    const isLandscapeMobile = window.matchMedia("(max-height:500px) and (orientation:landscape)").matches;
     const map = new maplibregl.Map({
       container:"map", style:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
-      center: isLandscapeMobile ? [80.18,13.08] : [80.2707,13.0827],
-      zoom: isLandscapeMobile ? 10 : 9.5,
-      pitch:0, antialias:true
+      center:[80.2707,13.0827], zoom:9.5, pitch:0, antialias:true
     });
     map.addControl(new maplibregl.NavigationControl(), "bottom-right");
     map.addControl(new maplibregl.ScaleControl({unit:"metric"}), "bottom-left");
