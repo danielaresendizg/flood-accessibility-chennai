@@ -273,6 +273,7 @@
         map.addSource("flood-high-src", { type:"geojson", data:floodData });
         map.addLayer({ id:"flood-high-fill", type:"fill", source:"flood-high-src",
           filter:["==",["get","CATEGORY"],"HIGH"],
+          layout:{ "visibility":"visible" },
           paint:{ "fill-color":"#7B0020", "fill-opacity":0.7, "fill-antialias":false }
         });
       } catch(e) { console.warn("Flood HIGH failed:", e); }

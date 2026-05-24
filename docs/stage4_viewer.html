@@ -108,6 +108,13 @@
         <small>100-yr high inundation zones</small>
       </div>
     </div>
+    <div class="tog active" data-layer="flood-moderate">
+      <div class="dot" style="background:#B05000;border-radius:2px;"></div>
+      <div class="tog-text">
+        <span>Flood MODERATE</span>
+        <small>100-yr moderate inundation zones</small>
+      </div>
+    </div>
     <div class="tog active" data-layer="cluster">
       <div class="dot" style="background:rgba(0,255,0,0.6);border:1px solid #00FF00;"></div>
       <div class="tog-text">
@@ -191,7 +198,7 @@
 
     const loadingEl = document.getElementById("loading");
     const tooltip   = document.getElementById("tooltip");
-    const state = { visible: new Set(["flood-high","cluster","shelter-safe","shelter-out","shelter-eval"]) };
+    const state = { visible: new Set(["flood-high","flood-moderate","cluster","shelter-safe","shelter-out","shelter-eval"]) };
 
     async function fetchWithRetry(url, attempts = 3) {
       for (let i = 0; i < attempts; i++) {
@@ -363,15 +370,21 @@
 
     map.on("load", async () => {
       map.setPaintProperty("water", "fill-color", "#000066");
-      // Flood HIGH — very bottom layer
+      // Flood HIGH + MODERATE — very bottom layers
       try {
         const floodData = await fetchWithRetry("./data/chennai_flood_indundation_zones.geojson");
-        map.addSource("flood-high-src", { type:"geojson", data:floodData });
-        map.addLayer({ id:"flood-high-fill", type:"fill", source:"flood-high-src",
+        map.addSource("flood-src", { type:"geojson", data:floodData });
+        map.addLayer({ id:"flood-high-fill", type:"fill", source:"flood-src",
           filter:["==",["get","CATEGORY"],"HIGH"],
+          layout:{ "visibility":"visible" },
           paint:{ "fill-color":"#7B0020", "fill-opacity":0.7, "fill-antialias":false }
         });
-      } catch(e) { console.warn("Flood HIGH failed:", e); }
+        map.addLayer({ id:"flood-moderate-fill", type:"fill", source:"flood-src",
+          filter:["==",["get","CATEGORY"],"MODERATE"],
+          layout:{ "visibility":"visible" },
+          paint:{ "fill-color":"#B05000", "fill-opacity":0.5, "fill-antialias":false }
+        });
+      } catch(e) { console.warn("Flood layers failed:", e); }
       // Load shelter icons
       const iconSafe = await svgToImg(shelterSVG("#ffffff", "#000000"), 32);
       const iconEval = await svgToImg(shelterSVG("#888888", "#ffffff"), 32);
