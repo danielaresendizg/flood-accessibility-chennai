@@ -322,7 +322,7 @@
       }
       if (values.length < 5) return [0, 0.25, 0.5, 0.75, 1];
       values.sort((a,b) => a-b);
-      return [0.05,0.25,0.50,0.75,0.95].map(p => percentile(values, p));
+      return [0.02,0.15,0.40,0.70,0.95].map(p => percentile(values, p));
     }
 
     function colorExpr(name) {
