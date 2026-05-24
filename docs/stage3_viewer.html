@@ -158,6 +158,13 @@
 
   <!-- Map controls -->
   <div id="panel">
+    <div class="tog active" data-layer="flood-high">
+      <div class="dot" style="background:#7B0020;border-radius:2px;"></div>
+      <div class="tog-text">
+        <span>Flood HIGH</span>
+        <small>100-yr high inundation zones</small>
+      </div>
+    </div>
     <div class="tog active" data-layer="corridors">
       <div class="tog-text">
         <span>Street network</span>
@@ -363,7 +370,7 @@
       </svg>`,
     };
 
-    const state = { visible: new Set(Object.keys(LAYERS)) };
+    const state = { visible: new Set([...Object.keys(LAYERS), "flood-high"]) };
 
     async function loadLayer(id) {
       const cfg = LAYERS[id];
@@ -450,6 +457,15 @@
         const img = await svgToImg(svg, 32);
         map.addImage(id, img);
       }
+      // Flood HIGH — very bottom layer
+      try {
+        const floodData = await fetchWithRetry("./data/chennai_flood_indundation_zones.geojson");
+        map.addSource("flood-high-src", { type:"geojson", data:floodData });
+        map.addLayer({ id:"flood-high-fill", type:"fill", source:"flood-high-src",
+          filter:["==",["get","CATEGORY"],"HIGH"],
+          paint:{ "fill-color":"#7B0020", "fill-opacity":0.7, "fill-antialias":false }
+        });
+      } catch(e) { console.warn("Flood HIGH failed:", e); }
       // Fragments first (bottom layer)
       try {
         const fragData = await fetchWithRetry("./data/fragments.geojson");

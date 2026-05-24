@@ -101,6 +101,13 @@
   <div id="map"></div>
 
   <div id="panel">
+    <div class="tog active" data-layer="flood-high">
+      <div class="dot" style="background:#7B0020;border-radius:2px;"></div>
+      <div class="tog-text">
+        <span>Flood HIGH</span>
+        <small>100-yr high inundation zones</small>
+      </div>
+    </div>
     <div class="tog active" data-layer="cluster">
       <div class="dot" style="background:rgba(0,255,0,0.6);border:1px solid #00FF00;"></div>
       <div class="tog-text">
@@ -184,7 +191,7 @@
 
     const loadingEl = document.getElementById("loading");
     const tooltip   = document.getElementById("tooltip");
-    const state = { visible: new Set(["cluster","shelter-safe","shelter-out","shelter-eval"]) };
+    const state = { visible: new Set(["flood-high","cluster","shelter-safe","shelter-out","shelter-eval"]) };
 
     async function fetchWithRetry(url, attempts = 3) {
       for (let i = 0; i < attempts; i++) {
@@ -356,6 +363,15 @@
 
     map.on("load", async () => {
       map.setPaintProperty("water", "fill-color", "#000066");
+      // Flood HIGH — very bottom layer
+      try {
+        const floodData = await fetchWithRetry("./data/chennai_flood_indundation_zones.geojson");
+        map.addSource("flood-high-src", { type:"geojson", data:floodData });
+        map.addLayer({ id:"flood-high-fill", type:"fill", source:"flood-high-src",
+          filter:["==",["get","CATEGORY"],"HIGH"],
+          paint:{ "fill-color":"#7B0020", "fill-opacity":0.7, "fill-antialias":false }
+        });
+      } catch(e) { console.warn("Flood HIGH failed:", e); }
       // Load shelter icons
       const iconSafe = await svgToImg(shelterSVG("#ffffff", "#000000"), 32);
       const iconEval = await svgToImg(shelterSVG("#888888", "#ffffff"), 32);
