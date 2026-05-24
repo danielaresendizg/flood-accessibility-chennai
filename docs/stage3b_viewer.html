@@ -61,7 +61,7 @@
   
     @media (max-width:700px) and (orientation:portrait) {
       html,body{overflow:auto;height:auto}
-      #map{position:relative;width:100%;height:55vw;min-height:240px}
+      #map{position:relative;width:100%;height:55vw;min-height:240px;margin-left:8vw}
       #info{position:relative;width:100%;height:auto;border-left:none;border-top:1px solid #1a1a1a;overflow-y:auto;padding:24px 20px}
       #panel{position:relative;top:auto;left:auto;width:100%;border-radius:0;background:#000;padding:16px 20px}
       #sidebar{position:relative;width:100%;border-left:none;border-top:1px solid #1a1a1a;padding:16px 20px;height:auto;overflow-y:auto}
@@ -194,6 +194,25 @@
     const loadingEl = document.getElementById("loading");
     const state = { visible: new Set(["floodplain","density"]) };
 
+    async function fetchWithRetry(url, attempts = 3) {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.json();
+        } catch (e) {
+          if (i === attempts - 1) throw e;
+          await new Promise(r => setTimeout(r, 800 * (i + 1)));
+        }
+      }
+    }
+
+    function showFetchError(msg) {
+      loadingEl.style.display = "block";
+      loadingEl.style.background = "rgba(80,0,0,0.92)";
+      loadingEl.textContent = msg || "Error loading data — check connection and reload.";
+    }
+
     const LAYERS = {
       floodplain: { url:"./data/floodplain_excavation_final.geojson", fill:"rgba(0,229,255,0.35)", stroke:"#00e5ff" },
       density:    { url:"./data/less_density_final.geojson",          fill:"rgba(245,158,11,0.55)", stroke:"#f59e0b" },
@@ -202,14 +221,10 @@
     async function loadLayer(id) {
       const cfg = LAYERS[id];
       loadingEl.style.display = "block";
+      loadingEl.style.background = "rgba(0,0,0,0.8)";
+      loadingEl.textContent = "Loading…";
       try {
-        const res = await fetch(cfg.url);
-        if (!res.ok) {
-          console.warn(`${id} not available (${res.status})`);
-          loadingEl.style.display = "none";
-          return;
-        }
-        const data = await res.json();
+        const data = await fetchWithRetry(cfg.url);
         if (!map.getSource(id)) map.addSource(id, { type:"geojson", data });
         map.addLayer({ id:`${id}-fill`, type:"fill", source:id,
           paint:{ "fill-color":cfg.fill, "fill-antialias":false }
@@ -218,7 +233,7 @@
           paint:{ "line-color":cfg.stroke, "line-width":1, "line-opacity":0.8 }
         });
       } catch(e) {
-        console.warn(`${id} failed:`, e);
+        showFetchError("Map data failed to load — check your connection and reload.");
       } finally {
         loadingEl.style.display = "none";
       }
@@ -239,11 +254,13 @@
     map.on("load", async () => {
       map.setPaintProperty("water", "fill-color", "#000066");
       // Rivers — same as context map
-      const rivData = await (await fetch("./data/chennai_rivers.geojson")).json();
-      map.addSource("src-rivers", { type:"geojson", data:rivData });
-      map.addLayer({ id:"lyr-rivers", type:"fill", source:"src-rivers",
-        paint:{ "fill-color":"#0000FF", "fill-opacity":1 }
-      });
+      try {
+        const rivData = await fetchWithRetry("./data/chennai_rivers.geojson");
+        map.addSource("src-rivers", { type:"geojson", data:rivData });
+        map.addLayer({ id:"lyr-rivers", type:"fill", source:"src-rivers",
+          paint:{ "fill-color":"#0000FF", "fill-opacity":1 }
+        });
+      } catch(e) { console.warn("Rivers failed:", e); }
 
       await loadLayer("floodplain");
       await loadLayer("density");

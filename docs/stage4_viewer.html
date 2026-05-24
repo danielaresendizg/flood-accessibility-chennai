@@ -102,7 +102,7 @@
 
   <div id="panel">
     <div class="tog active" data-layer="cluster">
-      <div class="dot" style="background:rgba(239,68,68,0.6);border:1px solid #ef4444;"></div>
+      <div class="dot" style="background:rgba(0,255,0,0.6);border:1px solid #00FF00;"></div>
       <div class="tog-text">
         <span>Safe zones</span>
         <small>Clusters 7 and 9 — flood-free, high accessibility</small>
@@ -147,7 +147,7 @@
   
     @media (max-width:700px) and (orientation:portrait) {
       html,body{overflow:auto;height:auto}
-      #map{position:relative;width:100%;height:55vw;min-height:240px}
+      #map{position:relative;width:100%;height:55vw;min-height:240px;margin-left:8vw}
       #info{position:relative;width:100%;height:auto;border-left:none;border-top:1px solid #1a1a1a;overflow-y:auto;padding:24px 20px}
       #panel{position:relative;top:auto;left:auto;width:100%;border-radius:0;background:#000;padding:16px 20px}
       #sidebar{position:relative;width:100%;border-left:none;border-top:1px solid #1a1a1a;padding:16px 20px;height:auto;overflow-y:auto}
@@ -161,7 +161,7 @@
   </style>
   <div id="info">
     <div class="info-title">Shelter evaluation</div>
-    <p class="info-text">Chennai does not break evenly. When the network fractures, some areas hold. Within the flood-free zones, blocks were evaluated by population density, local accessibility (NAINr800) and urban-scale accessibility (NAINr3000). Two <strong style="color:#ef4444;">safe zones</strong> stand out.<br><br>Cluster 7 is small, only 90 blocks, but spatially tight and highly connected. A place where resources can be concentrated and people can actually reach them.<br><br>Cluster 9 is the opposite: 50,424 blocks spread across all five urban fragments, a distributed backbone that keeps resilience within reach for a wider population.<br><br>Together they are complementary. But the shelters do not follow this logic. 48.6% of Chennai's emergency shelters sit more than 400 metres from any accessible safe zone, beyond reach when it matters most.</p>
+    <p class="info-text">Chennai does not break evenly. When the network fractures, some areas hold. Within the flood-free zones, blocks were evaluated by population density, local accessibility (NAINr800) and urban-scale accessibility (NAINr3000). Two <strong style="color:#00FF00;">safe zones</strong> stand out.<br><br>Cluster 7 is small, only 90 blocks, but spatially tight and highly connected. A place where resources can be concentrated and people can actually reach them.<br><br>Cluster 9 is the opposite: 50,424 blocks spread across all five urban fragments, a distributed backbone that keeps resilience within reach for a wider population.<br><br>Together they are complementary. But the shelters do not follow this logic. 48.6% of Chennai's emergency shelters sit more than 400 metres from any accessible safe zone, beyond reach when it matters most.</p>
     <div class="strat-label">Shelters — distance to accessible safe zone</div>
     <div id="lollipop"></div>
     <p class="method-note"><strong>Method</strong> — K-means clustering, 10 clusters. Cluster 7: density 0.493, NAINr800 0.615, NAINr3000 0.602. Cluster 9: density 0.439, NAINr800 0.411, NAINr3000 0.333.</p>
@@ -179,27 +179,48 @@
     const tooltip   = document.getElementById("tooltip");
     const state = { visible: new Set(["cluster","shelter-safe","shelter-out","shelter-eval"]) };
 
+    async function fetchWithRetry(url, attempts = 3) {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.json();
+        } catch (e) {
+          if (i === attempts - 1) throw e;
+          await new Promise(r => setTimeout(r, 800 * (i + 1)));
+        }
+      }
+    }
+
+    function showFetchError(msg) {
+      loadingEl.style.display = "block";
+      loadingEl.style.background = "rgba(80,0,0,0.92)";
+      loadingEl.textContent = msg || "Error loading data — check connection and reload.";
+    }
+
     // Distance range 0–392m → radius 4–20px
     const DIST_MIN = 0, DIST_MAX = 392;
     const R_MIN = 4, R_MAX = 20;
 
     async function load(id, url, addFn) {
       loadingEl.style.display = "block";
+      loadingEl.style.background = "rgba(0,0,0,0.8)";
+      loadingEl.textContent = "Loading…";
       try {
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await fetchWithRetry(url);
         if (!map.getSource(id)) map.addSource(id, { type:"geojson", data });
         addFn(id);
-      } catch(e) { console.warn(id, e); }
-      finally { loadingEl.style.display = "none"; }
+      } catch(e) {
+        showFetchError("Map data failed to load — check your connection and reload.");
+      } finally { loadingEl.style.display = "none"; }
     }
 
     function addCluster(id) {
       map.addLayer({ id:`${id}-fill`, type:"fill", source:id,
-        paint:{ "fill-color":"#ef4444", "fill-opacity":0.3, "fill-antialias":false }
+        paint:{ "fill-color":"#00FF00", "fill-opacity":0.3, "fill-antialias":false }
       });
       map.addLayer({ id:`${id}-line`, type:"line", source:id,
-        paint:{ "line-color":"#ef4444", "line-width":1, "line-opacity":0.7 }
+        paint:{ "line-color":"#00FF00", "line-width":1, "line-opacity":0.7 }
       });
     }
 

@@ -87,7 +87,7 @@
 
   @media (max-width:700px) and (orientation:portrait) {
     html,body{overflow:auto;height:auto}
-    #map{position:relative;width:100%;height:55vw;min-height:240px}
+    #map{position:relative;width:100%;height:55vw;min-height:240px;margin-left:8vw}
     #panel{
       position:relative;top:auto;left:auto;transform:none;
       flex-direction:row;align-items:center;flex-wrap:wrap;
@@ -235,6 +235,19 @@
 </div>
 
 <script>
+async function fetchWithRetry(url, attempts = 3) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      if (i === attempts - 1) throw e;
+      await new Promise(r => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+}
+
 const YEARS = ['1633','1733','1798','1875','1943','1963','1971','1976'];
 const ALL   = [...YEARS, '2006'];
 const COLORS = ['#FFE566','#FFE566','#FFE566','#FFE566','#FFE566','#FFE566','#FFE566','#FFE566'];
@@ -277,9 +290,7 @@ map.on('load', async () => {
   // Load year layers — inline data to avoid fetch errors
   for (let i = 0; i < YEARS.length; i++) {
     try {
-      const resp = await fetch(`data/${YEARS[i]}_net.geojson`);
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
+      const data = await fetchWithRetry(`data/${YEARS[i]}_net.geojson`);
       map.addSource(`src-${YEARS[i]}`, { type:'geojson', data });
       map.addLayer({
         id:`lyr-${YEARS[i]}`, type:'fill', source:`src-${YEARS[i]}`,
@@ -296,7 +307,7 @@ map.on('load', async () => {
     agricultural:'#C8E6A0', waterbody:'#A8D8EA',      Desconocido:'#333333',
   };
   try {
-    const lu1976 = await (await fetch('data/landuse_1976.geojson')).json();
+    const lu1976 = await fetchWithRetry('data/landuse_1976.geojson');
     map.addSource('src-lu-1976', { type:'geojson', data:lu1976 });
     map.addLayer({
       id:'lyr-lu-1976', type:'fill', source:'src-lu-1976',
@@ -310,7 +321,7 @@ map.on('load', async () => {
 
   // Land use 2006
   try {
-    const luData = await (await fetch('data/landuse_2006.geojson')).json();
+    const luData = await fetchWithRetry('data/landuse_2006.geojson');
     map.addSource('src-2006', { type:'geojson', data:luData });
     map.addLayer({
       id:'lyr-2006', type:'fill', source:'src-2006',
@@ -324,7 +335,7 @@ map.on('load', async () => {
 
   // Rivers — fill polygons from shapefile
   try {
-    const rivData = await (await fetch('data/chennai_rivers.geojson')).json();
+    const rivData = await fetchWithRetry('data/chennai_rivers.geojson');
     map.addSource('src-rivers', { type:'geojson', data:rivData });
     map.addLayer({ id:'lyr-rivers', type:'fill', source:'src-rivers',
       paint:{ 'fill-color':'#0000FF', 'fill-opacity':1 }
@@ -336,7 +347,7 @@ map.on('load', async () => {
 
   // River name labels
   try {
-    const rivLabels = await (await fetch('data/rivers_chennai.geojson')).json();
+    const rivLabels = await fetchWithRetry('data/rivers_chennai.geojson');
     map.addSource('src-river-labels', { type:'geojson', data:rivLabels });
     map.addLayer({ id:'lyr-river-labels', type:'symbol', source:'src-river-labels',
       layout:{

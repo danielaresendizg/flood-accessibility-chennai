@@ -99,7 +99,7 @@
   
     @media (max-width:700px) and (orientation:portrait) {
       html,body{overflow:auto;height:auto}
-      #map{position:relative;width:100%;height:55vw;min-height:240px}
+      #map{position:relative;width:100%;height:55vw;min-height:240px;margin-left:8vw}
       #info{position:relative;width:100%;height:auto;border-left:none;border-top:1px solid #1a1a1a;overflow-y:auto;padding:24px 20px}
       #panel{position:relative;top:auto;left:auto;width:100%;border-radius:0;background:#000;padding:16px 20px}
       #sidebar{position:relative;width:100%;border-left:none;border-top:1px solid #1a1a1a;padding:16px 20px;height:auto;overflow-y:auto}
@@ -222,6 +222,26 @@
   <div id="layer-hint">Tap layers to toggle</div>
 
   <script>
+    async function fetchWithRetry(url, attempts = 3) {
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return await res.json();
+        } catch (e) {
+          if (i === attempts - 1) throw e;
+          await new Promise(r => setTimeout(r, 800 * (i + 1)));
+        }
+      }
+    }
+
+    function showFetchError(msg) {
+      const el = document.getElementById("loading");
+      el.style.display = "block";
+      el.style.background = "rgba(80,0,0,0.92)";
+      el.textContent = msg || "Error loading data — check connection and reload.";
+    }
+
     const RAMP = ["#0000FF","#00CCFF","#00FF00","#FFFF00","#FF0000"];
 
     const STYLE = {
@@ -284,9 +304,13 @@
     async function loadLayer(name) {
       if (!state.cache[name]) {
         loadingEl.style.display = "block";
+        loadingEl.style.background = "rgba(0,0,0,0.8)";
+        loadingEl.textContent = "Loading…";
         try {
-          const res = await fetch(`./data/space_syntax_${name.replace(" ","_")}.geojson`);
-          state.cache[name] = await res.json();
+          state.cache[name] = await fetchWithRetry(`./data/space_syntax_${name.replace(" ","_")}.geojson`);
+        } catch(e) {
+          showFetchError("Map data failed to load — check your connection and reload.");
+          return;
         } finally { loadingEl.style.display = "none"; }
       }
       if (!map.getSource(sourceId(name))) {
@@ -321,7 +345,7 @@
         <div class="labels"><span>Low</span><span>High</span></div>`;
       if (state.floodOn) {
         html += `<div class="flood-legend"><h3>Flood 100-yr</h3>`;
-        [["LOW","#00e5ff",0.2],["MODERATE","#00e5ff",0.45],["HIGH","#00e5ff",0.75]].forEach(([label,color,op]) => {
+        [["LOW","#00e5ff",0.2],["MODERATE","#00e5ff",0.45],["HIGH","#7B0020",0.85]].forEach(([label,color,op]) => {
           html += `<div class="flood-item"><div class="flood-swatch" style="background:${color};opacity:${op}"></div>${label}</div>`;
         });
         html += `</div>`;
@@ -380,6 +404,7 @@
       fragBtn.classList.toggle("active", fragVisible);
     });
 
+    const FLOOD_LAYERS = ["flood-fill-high","flood-fill-moderate","flood-fill-low"];
     let floodLoaded = false;
     floodBtn.addEventListener("click", async () => {
       if (!state.floodOn) {
@@ -389,32 +414,30 @@
             const res = await fetch("./data/chennai_flood_indundation_zones.geojson");
             const data = await res.json();
             map.addSource("flood-src", { type:"geojson", data });
-            const colorMatch = ["match",["get","CATEGORY"],
-              "LOW",     "#00e5ff",
-              "MODERATE","#00e5ff",
-              "HIGH",    "#00e5ff",
-              "#00e5ff"
-            ];
-            const opacityMatch = ["match",["get","CATEGORY"],
-              "LOW",     0.2,
-              "MODERATE",0.45,
-              "HIGH",    0.75,
-              0.2
-            ];
-            // Insert below fragments layers
             const belowLayer = map.getLayer("fragments-glow") ? "fragments-glow" : undefined;
-            map.addLayer({ id:"flood-fill", type:"fill", source:"flood-src",
-              paint:{ "fill-color":colorMatch, "fill-opacity":opacityMatch, "fill-antialias":false }
+            map.addLayer({ id:"flood-fill-high", type:"fill", source:"flood-src",
+              filter:["==",["get","CATEGORY"],"HIGH"],
+              paint:{ "fill-color":"#7B0020", "fill-opacity":0.85, "fill-antialias":false }
+            }, belowLayer);
+            map.addLayer({ id:"flood-fill-moderate", type:"fill", source:"flood-src",
+              filter:["==",["get","CATEGORY"],"MODERATE"],
+              paint:{ "fill-color":"#00e5ff", "fill-opacity":0.45, "fill-antialias":false }
+            }, belowLayer);
+            map.addLayer({ id:"flood-fill-low", type:"fill", source:"flood-src",
+              filter:["==",["get","CATEGORY"],"LOW"],
+              paint:{ "fill-color":"#00e5ff", "fill-opacity":0.2, "fill-antialias":false }
             }, belowLayer);
             floodLoaded = true;
           } finally { loadingEl.style.display = "none"; }
         } else {
-          map.setLayoutProperty("flood-fill","visibility","visible");
+          FLOOD_LAYERS.forEach(id => map.setLayoutProperty(id,"visibility","visible"));
         }
         state.floodOn = true;
         floodBtn.classList.add("flood-active");
       } else {
-        map.setLayoutProperty("flood-fill","visibility","none");
+        FLOOD_LAYERS.forEach(id => {
+          if (map.getLayer(id)) map.setLayoutProperty(id,"visibility","none");
+        });
         state.floodOn = false;
         floodBtn.classList.remove("flood-active");
       }
@@ -489,66 +512,84 @@
 
       // Auto-load flood layer on start (before fragments so it renders below)
       loadingEl.style.display = "block";
+      loadingEl.style.background = "rgba(0,0,0,0.8)";
+      loadingEl.textContent = "Loading…";
       try {
-        const res = await fetch("./data/chennai_flood_indundation_zones.geojson");
-        const data = await res.json();
+        const data = await fetchWithRetry("./data/chennai_flood_indundation_zones.geojson");
         map.addSource("flood-src", { type:"geojson", data });
-        map.addLayer({ id:"flood-fill", type:"fill", source:"flood-src",
+        // HIGH layer first (bottom), then MODERATE, then LOW on top
+      map.addLayer({ id:"flood-fill-high", type:"fill", source:"flood-src",
+          filter:["==",["get","CATEGORY"],"HIGH"],
+          paint:{ "fill-color":"#7B0020", "fill-opacity":0.85, "fill-antialias":false }
+        });
+      map.addLayer({ id:"flood-fill-moderate", type:"fill", source:"flood-src",
+          filter:["==",["get","CATEGORY"],"MODERATE"],
+          paint:{ "fill-color":"#00e5ff", "fill-opacity":0.45, "fill-antialias":false }
+        });
+      map.addLayer({ id:"flood-fill-low", type:"fill", source:"flood-src",
+          filter:["==",["get","CATEGORY"],"LOW"],
+          paint:{ "fill-color":"#00e5ff", "fill-opacity":0.2, "fill-antialias":false }
+        });
+      // Hidden combined layer kept for toggle ref
+      map.addLayer({ id:"flood-fill", type:"fill", source:"flood-src",
           paint:{
             "fill-color": ["match",["get","CATEGORY"],
-              "LOW","#00e5ff","MODERATE","#00e5ff","HIGH","#00e5ff","#00e5ff"],
+              "LOW","#00e5ff","MODERATE","#00e5ff","HIGH","#7B0020","#00e5ff"],
             "fill-opacity": ["match",["get","CATEGORY"],
-              "LOW",0.2,"MODERATE",0.45,"HIGH",0.75,0.2],
+              "LOW",0.2,"MODERATE",0.45,"HIGH",0.85,0.2],
             "fill-antialias": false
-          }
+          },
+          layout:{ "visibility":"none" }
         });
         floodLoaded = true;
       } finally { loadingEl.style.display = "none"; }
 
       // Fragments on top — outline + glow + labels
-      const fragRes = await fetch("./data/fragments.geojson");
-      const fragData = await fragRes.json();
-      map.addSource("fragments", { type:"geojson", data:fragData });
+      try {
+        const fragData = await fetchWithRetry("./data/fragments.geojson");
+        map.addSource("fragments", { type:"geojson", data:fragData });
+        // Glow (wide, blurred)
+        map.addLayer({ id:"fragments-glow", type:"line", source:"fragments",
+          paint:{ "line-color":"#ffffff", "line-width":8, "line-opacity":0.08, "line-blur":6 }
+        });
+        // White outline — no fill
+        map.addLayer({ id:"fragments-line", type:"line", source:"fragments",
+          paint:{ "line-color":"#ffffff", "line-width":1.2, "line-opacity":0.6, "line-dasharray":[4,3] }
+        });
+      } catch(e) { console.warn("Fragments failed:", e); }
 
-      // Glow (wide, blurred)
-      map.addLayer({ id:"fragments-glow", type:"line", source:"fragments",
-        paint:{ "line-color":"#ffffff", "line-width":8, "line-opacity":0.08, "line-blur":6 }
-      });
-      // White outline — no fill
-      map.addLayer({ id:"fragments-line", type:"line", source:"fragments",
-        paint:{ "line-color":"#ffffff", "line-width":1.2, "line-opacity":0.6, "line-dasharray":[4,3] }
-      });
       // Fragment labels as HTML markers — always visible
-      const labRes = await fetch("./data/fragments_labels.geojson");
-      const labData = await labRes.json();
-      labData.features.forEach(feat => {
-        const [lon, lat] = feat.geometry.coordinates;
-        const num = feat.properties.num;
-        const el = document.createElement("div");
-        el.textContent = num;
-        el.style.cssText = `
-          font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
-          font-size:52px; font-weight:900;
-          color:rgba(255,255,255,0.45);
-          pointer-events:auto;
-          line-height:1;
-          text-shadow: 0 0 20px rgba(255,255,255,0.15);
-          transform: translate(-50%,-50%);
-          cursor:default;
-          transition: color 200ms ease, text-shadow 200ms ease;
-        `;
-        el.addEventListener('mouseenter', () => {
-          el.style.color = 'rgba(255,255,255,1)';
-          el.style.textShadow = '0 0 30px rgba(255,255,255,0.6)';
+      try {
+        const labData = await fetchWithRetry("./data/fragments_labels.geojson");
+        labData.features.forEach(feat => {
+          const [lon, lat] = feat.geometry.coordinates;
+          const num = feat.properties.num;
+          const el = document.createElement("div");
+          el.textContent = num;
+          el.style.cssText = `
+            font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+            font-size:52px; font-weight:900;
+            color:rgba(255,255,255,0.45);
+            pointer-events:auto;
+            line-height:1;
+            text-shadow: 0 0 20px rgba(255,255,255,0.15);
+            transform: translate(-50%,-50%);
+            cursor:default;
+            transition: color 200ms ease, text-shadow 200ms ease;
+          `;
+          el.addEventListener('mouseenter', () => {
+            el.style.color = 'rgba(255,255,255,1)';
+            el.style.textShadow = '0 0 30px rgba(255,255,255,0.6)';
+          });
+          el.addEventListener('mouseleave', () => {
+            el.style.color = 'rgba(255,255,255,0.45)';
+            el.style.textShadow = '0 0 20px rgba(255,255,255,0.15)';
+          });
+          new maplibregl.Marker({ element:el, anchor:"center" })
+            .setLngLat([lon, lat])
+            .addTo(map);
         });
-        el.addEventListener('mouseleave', () => {
-          el.style.color = 'rgba(255,255,255,0.45)';
-          el.style.textShadow = '0 0 20px rgba(255,255,255,0.15)';
-        });
-        new maplibregl.Marker({ element:el, anchor:"center" })
-          .setLngLat([lon, lat])
-          .addTo(map);
-      });
+      } catch(e) { console.warn("Fragment labels failed:", e); }
 
       renderLegend();
 

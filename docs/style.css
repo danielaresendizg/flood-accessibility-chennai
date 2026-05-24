@@ -558,7 +558,7 @@ section.visible{opacity:1;transform:translateY(0)}
     display:block;
     font-size:1.1rem;
     padding:10px 16px 4px;
-    color:var(--accent);
+    color:#fff;
   }
   .globe-caption{position:static;max-width:100%;padding:12px 16px;font-size:9px}
   .globe-wrap{height:92vw}
