@@ -150,13 +150,6 @@
   <div id="map"></div>
 
   <div id="panel">
-    <div class="tog active" data-layer="flood-high">
-      <div class="dot" style="background:#7B0020;border-radius:2px;"></div>
-      <div class="tog-text">
-        <span>Flood HIGH</span>
-        <small>100-yr high inundation zones</small>
-      </div>
-    </div>
     <div class="tog active" data-layer="floodplain">
       <div class="dot" style="background:#00e5ff;"></div>
       <div class="tog-text">
@@ -209,7 +202,7 @@
     map.addControl(new maplibregl.ScaleControl({unit:"metric"}), "bottom-left");
 
     const loadingEl = document.getElementById("loading");
-    const state = { visible: new Set(["flood-high","floodplain","density"]) };
+    const state = { visible: new Set(["floodplain","density"]) };
 
     async function fetchWithRetry(url, attempts = 3) {
       for (let i = 0; i < attempts; i++) {
@@ -270,16 +263,6 @@
 
     map.on("load", async () => {
       map.setPaintProperty("water", "fill-color", "#000066");
-      // Flood HIGH — very bottom layer
-      try {
-        const floodData = await fetchWithRetry("./data/chennai_flood_indundation_zones.geojson");
-        map.addSource("flood-high-src", { type:"geojson", data:floodData });
-        map.addLayer({ id:"flood-high-fill", type:"fill", source:"flood-high-src",
-          filter:["==",["get","CATEGORY"],"HIGH"],
-          layout:{ "visibility":"visible" },
-          paint:{ "fill-color":"#7B0020", "fill-opacity":0.7, "fill-antialias":false }
-        });
-      } catch(e) { console.warn("Flood HIGH failed:", e); }
       // Rivers — same as context map
       try {
         const rivData = await fetchWithRetry("./data/chennai_rivers.geojson");
