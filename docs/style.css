@@ -236,6 +236,18 @@ section.visible{opacity:1;transform:translateY(0)}
 /* ── Intro globe section ──────────────────────────────────── */
 .intro-section{padding:0;min-height:100vh}
 .globe-wrap{position:relative;width:100%;height:100vh;overflow:hidden}
+#flood-tooltip{
+  position:fixed;
+  display:none;
+  background:#000;
+  color:#fff;
+  font-size:11px;
+  font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  padding:5px 10px;
+  pointer-events:none;
+  z-index:9999;
+  white-space:nowrap;
+}
 #flood-globe{position:absolute;top:0;left:0;width:100%;height:100%}
 .globe-overlay-title{
   position:absolute;top:60px;left:1%;
