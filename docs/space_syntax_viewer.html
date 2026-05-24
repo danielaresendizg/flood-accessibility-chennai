@@ -313,23 +313,24 @@
       return expr;
     }
 
-    async function loadLayer(name) {
-      if (!state.cache[name]) {
-        loadingEl.style.display = "block";
-        loadingEl.style.background = "rgba(0,0,0,0.8)";
-        loadingEl.textContent = "Loading…";
-        try {
-          state.cache[name] = await fetchWithRetry(`./data/space_syntax_${name.replace(" ","_")}.geojson`);
-        } catch(e) {
-          showFetchError("Map data failed to load — check your connection and reload.");
-          return;
-        } finally { loadingEl.style.display = "none"; }
-      }
+    async function fetchLayer(name) {
+      if (state.cache[name]) return;
+      loadingEl.style.display = "block";
+      loadingEl.style.background = "rgba(0,0,0,0.8)";
+      loadingEl.textContent = "Loading…";
+      try {
+        state.cache[name] = await fetchWithRetry(`./data/space_syntax_${name.replace(" ","_")}.geojson`);
+      } catch(e) {
+        showFetchError("Map data failed to load — check your connection and reload.");
+      } finally { loadingEl.style.display = "none"; }
+    }
+
+    function addLayerToMap(name) {
+      if (!state.cache[name]) return;
       if (!map.getSource(sourceId(name))) {
         map.addSource(sourceId(name), { type:"geojson", data:state.cache[name] });
       }
       if (!map.getLayer(layerId(name))) {
-        // Insert below fragments so flood stays at the very bottom
         const beforeId = map.getLayer("fragments-glow") ? "fragments-glow" : undefined;
         map.addLayer({ id:layerId(name), type:"line", source:sourceId(name),
           paint:{ "line-color":colorExpr(name), "line-width":1.2, "line-opacity":0.9 }
@@ -367,14 +368,23 @@
       legendEl.innerHTML = html;
     }
 
+    async function activateGroup(group, radio) {
+      const names = ZONE_GROUPS[group].map(z => `${z} ${radio}`);
+      // 1. fetch all data in parallel
+      await Promise.all(names.map(n => fetchLayer(n)));
+      // 2. register in state.active so computeDomain sees all values
+      names.forEach(n => { if (state.cache[n]) state.active.add(n); });
+      // 3. now add to map — domain is computed with all layers present
+      names.forEach(n => addLayerToMap(n));
+    }
+
     document.querySelectorAll("[data-group]").forEach(btn => {
       btn.addEventListener("click", async () => {
         const group = btn.dataset.group;
         if (btn.classList.contains("active")) return;
         for (const n of [...state.active]) { removeLayer(n); state.active.delete(n); }
         document.querySelectorAll("[data-group]").forEach(b => b.classList.remove("active"));
-        const names = ZONE_GROUPS[group].map(z => `${z} ${state.radio}`);
-        await Promise.all(names.map(n => loadLayer(n).then(() => state.active.add(n))));
+        await activateGroup(group, state.radio);
         btn.classList.add("active");
         updateColors(); renderLegend();
       });
@@ -384,17 +394,14 @@
       btn.addEventListener("click", async () => {
         const newRadio = btn.dataset.radio;
         if (newRadio === state.radio) return;
-        const oldNames = [...state.active];
-        oldNames.forEach(n => removeLayer(n));
-        state.active.clear();
+        const activeGroups = [...document.querySelectorAll("[data-group].active")].map(b => b.dataset.group);
+        for (const n of [...state.active]) { removeLayer(n); state.active.delete(n); }
         state.radio = newRadio;
         document.querySelectorAll("[data-radio]").forEach(b => b.classList.toggle("active", b.dataset.radio === newRadio));
-        const activeGroups = [...document.querySelectorAll("[data-group].active")].map(b => b.dataset.group);
         for (const group of activeGroups) {
-          const names = ZONE_GROUPS[group].map(z => `${z} ${newRadio}`);
-          await Promise.all(names.map(n => loadLayer(n).then(() => state.active.add(n))));
+          await activateGroup(group, newRadio);
         }
-        renderLegend();
+        updateColors(); renderLegend();
       });
     });
 
@@ -502,25 +509,12 @@
 
     buildChart();
 
-    function collapseInstructions() {
-      const body = document.getElementById('instr-body');
-      if (body && body.style.display !== 'none') {
-        body.style.display = 'none';
-        document.getElementById('instr-toggle').textContent = 'How to use ↓';
-      }
-    }
-    map.once('click', collapseInstructions);
-    document.querySelectorAll('.btn[data-group], .btn[data-radio], .btn[data-metric], #floodBtn, #fragBtn').forEach(btn => {
-      btn.addEventListener('click', collapseInstructions, { once: true });
-    });
-
     map.on("load", async () => {
       map.setPaintProperty("water", "fill-color", "#000066");
       map.fitBounds([[80.1396, 12.8519],[80.3320, 13.2330]], { padding:20, animate:false });
 
       // Auto-load citywide r3000 NAIN on start
-      const initNames = ZONE_GROUPS["citywide"].map(z => `${z} r3000`);
-      await Promise.all(initNames.map(n => loadLayer(n).then(() => state.active.add(n))));
+      await activateGroup("citywide", "r3000");
       document.querySelectorAll("[data-group]").forEach(b => b.classList.toggle("active", b.dataset.group === "citywide"));
       updateColors();
 
