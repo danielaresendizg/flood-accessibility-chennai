@@ -49,7 +49,7 @@
     .btn { opacity:0.4; transition:opacity 120ms, color 120ms, border-color 120ms; }
     .btn:hover { color:#fff; opacity:0.75; }
     .btn.active { background:transparent; border-bottom:1px solid #fff; color:#fff; opacity:1; }
-    .btn.flood-active { color:#93c5fd; border-bottom:1px solid #3b82f6; }
+    .btn.flood-active { color:#00e5ff; border-bottom:1px solid #00e5ff; }
 
     .divider { display:none; }
 
@@ -192,8 +192,8 @@
     <hr class="divider">
     <span class="section-lbl">Radius</span>
     <div class="row">
-      <button class="btn active" data-radio="r800">Pedestrian</button>
-      <button class="btn" data-radio="r3000">Urban</button>
+      <button class="btn" data-radio="r800">Pedestrian</button>
+      <button class="btn active" data-radio="r3000">Urban</button>
     </div>
     <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">r800 local scale · r3000 city scale</small>
     <hr class="divider">
@@ -204,7 +204,7 @@
     </div>
     <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">NAIN how reachable · NACH how much movement</small>
     <hr class="divider">
-    <button class="btn" id="floodBtn">100-yr flood</button>
+    <button class="btn flood-active" id="floodBtn">100-yr flood</button>
     <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">Overlay flood inundation zones by severity</small>
     <button class="btn active" id="fragBtn" style="margin-top:6px;">Fragments F1–F5</button>
     <small style="color:#aaa;font-size:7px;line-height:1.3;display:block;margin-top:2px;">Toggle disconnected area boundaries</small>
@@ -224,7 +224,7 @@
       citywide: ["citywide"],
     };
 
-    const state = { metric:"NAIN", radio:"r800", active:new Set(), cache:{}, floodOn:false };
+    const state = { metric:"NAIN", radio:"r3000", active:new Set(), cache:{}, floodOn:true };
 
     const map = new maplibregl.Map({
       container:"map", style:"https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
@@ -312,7 +312,7 @@
         <div class="labels"><span>Low</span><span>High</span></div>`;
       if (state.floodOn) {
         html += `<div class="flood-legend"><h3>Flood 100-yr</h3>`;
-        [["LOW","#ffffff",0.25],["MODERATE","#6666ff",0.45],["HIGH","#0000FF",0.65]].forEach(([label,color,op]) => {
+        [["LOW","#00e5ff",0.2],["MODERATE","#00e5ff",0.45],["HIGH","#00e5ff",0.75]].forEach(([label,color,op]) => {
           html += `<div class="flood-item"><div class="flood-swatch" style="background:${color};opacity:${op}"></div>${label}</div>`;
         });
         html += `</div>`;
@@ -381,16 +381,16 @@
             const data = await res.json();
             map.addSource("flood-src", { type:"geojson", data });
             const colorMatch = ["match",["get","CATEGORY"],
-              "LOW",     "#ffffff",
-              "MODERATE","#6666ff",
-              "HIGH",    "#0000FF",
-              "#ffffff"
+              "LOW",     "#00e5ff",
+              "MODERATE","#00e5ff",
+              "HIGH",    "#00e5ff",
+              "#00e5ff"
             ];
             const opacityMatch = ["match",["get","CATEGORY"],
-              "LOW",     0.25,
+              "LOW",     0.2,
               "MODERATE",0.45,
-              "HIGH",    0.65,
-              0.3
+              "HIGH",    0.75,
+              0.2
             ];
             // Insert below fragments layers
             const belowLayer = map.getLayer("fragments-glow") ? "fragments-glow" : undefined;
@@ -472,8 +472,29 @@
       map.setPaintProperty("water", "fill-color", "#000066");
       map.fitBounds([[80.1396, 12.8519],[80.3320, 13.2330]], { padding:20, animate:false });
 
-      // Load street network first
-      // No auto-load — user activates layers manually
+      // Auto-load citywide r3000 NAIN on start
+      const initNames = ZONE_GROUPS["citywide"].map(z => `${z} r3000`);
+      await Promise.all(initNames.map(n => loadLayer(n).then(() => state.active.add(n))));
+      document.querySelectorAll("[data-group]").forEach(b => b.classList.toggle("active", b.dataset.group === "citywide"));
+      updateColors();
+
+      // Auto-load flood layer on start (before fragments so it renders below)
+      loadingEl.style.display = "block";
+      try {
+        const res = await fetch("./data/chennai_flood_indundation_zones.geojson");
+        const data = await res.json();
+        map.addSource("flood-src", { type:"geojson", data });
+        map.addLayer({ id:"flood-fill", type:"fill", source:"flood-src",
+          paint:{
+            "fill-color": ["match",["get","CATEGORY"],
+              "LOW","#00e5ff","MODERATE","#00e5ff","HIGH","#00e5ff","#00e5ff"],
+            "fill-opacity": ["match",["get","CATEGORY"],
+              "LOW",0.2,"MODERATE",0.45,"HIGH",0.75,0.2],
+            "fill-antialias": false
+          }
+        });
+        floodLoaded = true;
+      } finally { loadingEl.style.display = "none"; }
 
       // Fragments on top — outline + glow + labels
       const fragRes = await fetch("./data/fragments.geojson");

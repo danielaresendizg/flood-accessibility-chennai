@@ -149,6 +149,15 @@
     @media (max-width: 1024px) and (orientation: portrait) {
       #rotate-prompt { display: flex; }
     }
+    @media (max-height: 600px) and (orientation: landscape) {
+      #app { flex-direction:row; height:100%; overflow:hidden; }
+      #left { flex:1; overflow-y:auto; height:100%; padding:10px 16px; }
+      #right { width:280px; overflow-y:auto; height:100%; padding:10px 14px; gap:8px; }
+      .group-title { font-size:8px; margin-bottom:6px; }
+      .ctrl-label { font-size:8px; margin-bottom:6px; }
+      #minimap { min-height:80px; }
+      #narrative-text { font-size:9px; }
+    }
   </style>
 </head>
 <body>

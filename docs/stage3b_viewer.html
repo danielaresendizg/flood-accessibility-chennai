@@ -133,7 +133,7 @@
 
   <div id="panel">
     <div class="tog active" data-layer="floodplain">
-      <div class="dot" style="background:#3b82f6;"></div>
+      <div class="dot" style="background:#00e5ff;"></div>
       <div class="tog-text">
         <span>Floodplain excavation</span>
         <small>Low-lying open spaces for drainage restoration</small>
@@ -161,7 +161,7 @@
   <!-- Right panel -->
   <div id="info">
     <div class="info-title">Floodplain &amp; density strategy</div>
-    <p class="info-text">Using a DEM (Copernicus GLO-30) and waterway data (IWRS), the city's lowest-lying areas were cross-referenced with high flood-risk zones. Large open spaces within this overlap are proposed for <strong style="color:#3b82f6;">floodplain excavation</strong> (blue), restoring natural drainage capacity, excluding streets with high local integration (NAINr800) to preserve the existing pedestrian network. Areas where residential buildings (Google Open Buildings) coincide with high flood-risk are designated for <strong style="color:#f59e0b;">density reduction</strong> (orange), limiting future exposure through adaptive urban planning.</p>
+    <p class="info-text">Using a DEM (Copernicus GLO-30) and waterway data (IWRS), the city's lowest-lying areas were cross-referenced with high flood-risk zones. Large open spaces within this overlap are proposed for <strong style="color:#00e5ff;">floodplain excavation</strong> (blue), restoring natural drainage capacity, excluding streets with high local integration (NAINr800) to preserve the existing pedestrian network. Areas where residential buildings (Google Open Buildings) coincide with high flood-risk are designated for <strong style="color:#f59e0b;">density reduction</strong> (orange), limiting future exposure through adaptive urban planning.</p>
 
     <div>
       <div class="eval-title" style="margin-bottom:6px;">Proposed interventions</div>
@@ -186,7 +186,7 @@
     const state = { visible: new Set(["floodplain","density"]) };
 
     const LAYERS = {
-      floodplain: { url:"./data/floodplain_excavation_final.geojson", fill:"rgba(59,130,246,0.4)", stroke:"#3b82f6" },
+      floodplain: { url:"./data/floodplain_excavation_final.geojson", fill:"rgba(0,229,255,0.35)", stroke:"#00e5ff" },
       density:    { url:"./data/less_density_final.geojson",          fill:"rgba(245,158,11,0.55)", stroke:"#f59e0b" },
     };
 
