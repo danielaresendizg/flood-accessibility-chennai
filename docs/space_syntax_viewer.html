@@ -288,6 +288,7 @@
 
     function computeDomain(rk) {
       const field = STYLE[state.metric].fields[rk];
+      const isNACH = state.metric === "NACH";
       const values = [];
       for (const name of state.active) {
         if (!name.includes(rk)) continue;
@@ -296,12 +297,18 @@
         for (const f of fc.features) {
           const v = f.properties?.[field];
           const n = typeof v === "number" ? v : Number(v);
-          if (Number.isFinite(n)) values.push(n);
+          // NACH has many zero-value dead-end segments; exclude them from domain
+          if (Number.isFinite(n) && !(isNACH && n === 0)) values.push(n);
         }
       }
       if (values.length < 5) return [0, 0.25, 0.5, 0.75, 1];
       values.sort((a,b) => a-b);
-      return [0.02,0.15,0.40,0.70,0.95].map(p => percentile(values, p));
+      const stops = [0.02,0.15,0.40,0.70,0.95].map(p => percentile(values, p));
+      // Ensure no duplicate stops (MapLibre requires strictly increasing values)
+      for (let i = 1; i < stops.length; i++) {
+        if (stops[i] <= stops[i-1]) stops[i] = stops[i-1] + 0.001;
+      }
+      return stops;
     }
 
     function colorExpr(name) {
