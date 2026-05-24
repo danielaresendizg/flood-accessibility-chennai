@@ -149,6 +149,14 @@
     @media (max-width: 1024px) and (orientation: portrait) {
       #rotate-prompt { display: flex; }
     }
+    #layer-hint {
+      position:fixed; bottom:32px; left:50%; transform:translateX(-50%);
+      background:rgba(0,0,0,0.6); color:#fff;
+      font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-size:8px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+      padding:6px 14px; pointer-events:none; z-index:30;
+      opacity:0; transition:opacity 600ms ease;
+    }
     @media (max-height: 600px) and (orientation: landscape) {
       #app { flex-direction:row; height:100%; overflow:hidden; }
       #left { flex:1; overflow-y:auto; height:100%; padding:10px 16px; }
@@ -172,6 +180,7 @@
     </div>
   </div>
 
+<div id="layer-hint">Tap fragments to filter</div>
 <div id="app">
 
   <!-- Left: all bars -->
@@ -372,7 +381,13 @@ document.querySelectorAll("[data-frag]").forEach(btn => {
   });
 });
 
-loadData();
+loadData().then(() => {
+  const hint = document.getElementById("layer-hint");
+  setTimeout(() => {
+    hint.style.opacity = "1";
+    setTimeout(() => { hint.style.opacity = "0"; }, 3000);
+  }, 1000);
+});
 </script>
 </body>
 </html>
