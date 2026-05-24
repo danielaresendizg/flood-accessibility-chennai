@@ -155,8 +155,15 @@
       #loading{position:fixed}
     }
     @media (max-height:500px) and (orientation:landscape) {
-      #map{width:55%;height:100%;position:absolute}
+      #map{width:55%;height:100%;position:absolute;left:0}
       #info{position:absolute;top:0;right:0;width:45%;height:100%;overflow-y:auto}
+      #panel{
+        position:absolute;bottom:8px;left:8px;top:auto;
+        background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);
+        border-radius:6px;padding:6px 10px;
+        max-height:calc(100% - 16px);max-width:190px;
+        overflow-y:auto;
+      }
     }
   </style>
   <div id="info">

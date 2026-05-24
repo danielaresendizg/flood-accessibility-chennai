@@ -107,8 +107,28 @@
       #loading{position:fixed}
     }
     @media (max-height:500px) and (orientation:landscape) {
-      #map{width:55%;height:100%;position:absolute}
-      #info{position:absolute;top:0;right:0;width:45%;height:100%;overflow-y:auto}
+      /* Sidebar hidden — too tall for landscape mobile */
+      #sidebar{display:none}
+      /* Map fills full width */
+      #map{position:absolute;top:0;left:0;width:100%;height:100%}
+      /* Panel bottom-left, compact, scrollable */
+      #panel{
+        position:absolute;bottom:8px;left:8px;top:auto;z-index:9;
+        background:rgba(0,0,0,0.88);backdrop-filter:blur(8px);
+        border-radius:6px;padding:6px 10px;
+        max-height:calc(100% - 16px);width:200px;
+        overflow-y:auto;white-space:normal;font-size:8px;
+      }
+      /* Instructions top-left, small */
+      #instructions{top:6px;left:8px;max-width:180px}
+      /* Leyenda siempre visible */
+      #legend{display:block!important;margin-top:6px}
+      .flood-legend{display:block!important}
+      .bar{display:block!important;height:6px}
+      .labels{display:flex!important}
+      /* Botones más compactos */
+      .btn{padding:3px 0;font-size:7px}
+      .section-lbl{font-size:7px}
     }
   
     /* Orientation lock — portrait mobile/tablet */
